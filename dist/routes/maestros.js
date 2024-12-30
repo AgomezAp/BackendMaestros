@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const maestros_1 = require("../controllers/maestros");
+const router = (0, express_1.Router)();
+router.post("/api/maestros/registrar-maestro", maestros_1.registrarMaestro);
+router.get("/api/maestros/obtener-maestros", maestros_1.ObtenerMaestros);
+router.delete("/api/maestros/borrar-maestro/:Mid", maestros_1.borrarMaestrosPorId);
+router.patch("/api/maestros/actualizar-maestro/:Mid", maestros_1.actualizarMaestro);
+router.get('/api/reporte', maestros_1.generarReporte);
+router.get('/api/reporte-mensual', maestros_1.generarReporteMensual);
+router.get('/api/obtenerRecordMaestros', maestros_1.obtenerTodosLosMaestros);
+exports.default = router;
