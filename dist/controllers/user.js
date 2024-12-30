@@ -68,7 +68,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         id: user.Uid,
         correo: user.correo,
     }, process.env.SECRET_KEY || "DxVj971V5CxBQGB7hDqwOenbRbbH4mrS", {
-        expiresIn: "1h",
+        expiresIn: "30m",
     });
     res.json({
         msg: "Usuario logeado con éxito",

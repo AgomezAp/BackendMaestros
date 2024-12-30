@@ -64,7 +64,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     },
     process.env.SECRET_KEY || "DxVj971V5CxBQGB7hDqwOenbRbbH4mrS",
     {
-      expiresIn: "1h",
+      expiresIn: "30m",
     }
   );
   res.json({
