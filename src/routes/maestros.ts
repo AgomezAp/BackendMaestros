@@ -5,6 +5,7 @@ import {
   borrarMaestrosPorId,
   generarReporte,
   generarReporteMensual,
+  maestrosActivos,
   ObtenerMaestros,
   obtenerTodosLosMaestros,
   registrarMaestro,
@@ -17,8 +18,8 @@ router.post( "/api/maestros/registrar-maestro",validateToken,registrarMaestro);
 router.get("/api/maestros/obtener-maestros",validateToken,ObtenerMaestros);
 router.delete("/api/maestros/borrar-maestro/:Mid",validateToken,borrarMaestrosPorId);
 router.patch("/api/maestros/actualizar-maestro/:Mid",validateToken,actualizarMaestro);
-router.get('/api/reporte',validateToken ,generarReporte);
-router.get('/api/reporte-mensual', validateToken,generarReporteMensual);
-router.get('/api/obtenerRecordMaestros',validateToken ,obtenerTodosLosMaestros);
-
+router.post('/api/maestros/reporte',validateToken ,generarReporte);
+router.get('/api/maestros/reporte-mensual', validateToken,generarReporteMensual);
+router.get('/api/maestros/obtenerRecordMaestros',validateToken ,obtenerTodosLosMaestros);
+router.get('/api/maestros/activos', maestrosActivos);
 export default router;

@@ -29,8 +29,19 @@ class Server {
     });
   }
   middlewares() {
-    this.app.use(express.json());
-    this.app.use(cors());
+    this.app.use(express.json())
+    this.app.use(cors({
+        origin: '*', // Permite todas las solicitudes de origen cruzado
+        methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'], // Métodos permitidos
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }));
+    this.app.use((req, res, next) => {
+        res.setTimeout(60000, () => { // 2 minutos
+            console.log('Request has timed out.');
+            res.status(408).send('Request has timed out.');
+        });
+        next();
+    });
   }
   routes() {
     this.app.use(RUser);

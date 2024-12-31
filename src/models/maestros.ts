@@ -16,7 +16,9 @@ export class Maestro extends Model {
   public descripcion!: string;
   public Uid!: number;
   public estado!: string;
-
+  public region!: string;
+  public marca!: string;
+  public modelo!: string;
 }
 
 Maestro.init(
@@ -52,6 +54,18 @@ Maestro.init(
     estado: {
       type: DataTypes.STRING,
       defaultValue: 'activo',
+    },
+    region: { // Nuevo campo región
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    marca: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    modelo: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
   },
   {

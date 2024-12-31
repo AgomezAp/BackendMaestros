@@ -7,11 +7,12 @@ import { Op } from 'sequelize';
 import { maestroBorrado } from '../models/maestroBorrado';
 import { Maestro } from '../models/maestros';
 import { MovimientoMaestro } from '../models/movimientoMaestro';
+import { User } from '../models/user';
 
 export const registrarMaestro = async ( req: Request,
   res: Response
 ): Promise<any> => {
-  const { nombre, apellido, correo, cedula, firma, descripcion, estado, Uid } = req.body
+  const { nombre, apellido, correo, cedula, firma, descripcion, estado, region,marca,modelo,Uid} = req.body
   try {
     const maestroExistente = await Maestro.findOne({
       where: {
@@ -34,6 +35,9 @@ export const registrarMaestro = async ( req: Request,
       firma,
       descripcion,
       estado,
+      region,
+      marca,
+      modelo,
       Uid,
     });
 
@@ -112,6 +116,9 @@ export const borrarMaestrosPorId = async (
       cedula: maestro.cedula,
       firma: maestro.firma,
       descripcion: maestro.descripcion,
+      region:maestro.region,
+      marca:maestro.marca,
+      modelo:maestro.modelo,
       Uid: maestro.Uid,
       estado: 'INACTIVO',
       deletedAt: new Date(),
@@ -138,7 +145,7 @@ export const borrarMaestrosPorId = async (
 
 export const actualizarMaestro = async (req: Request, res: Response): Promise<any> => {
     const { Mid } = req.params;
-    const { nombre, apellido, correo, cedula, firma, descripcion } = req.body;
+    const { nombre, apellido, correo, cedula, firma, descripcion,region } = req.body;
     try {
         const maestro = await Maestro.findByPk(Mid);
         if(!maestro){
@@ -153,6 +160,7 @@ export const actualizarMaestro = async (req: Request, res: Response): Promise<an
             correo,
             cedula,
             firma,
+            region,
             descripcion,
         }, {where: {Mid}});
         res.status(200).json({
@@ -168,38 +176,80 @@ export const actualizarMaestro = async (req: Request, res: Response): Promise<an
     }
 }
 
+export const maestrosActivos = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const maestros = await Maestro.findAll({
+      where: { estado: 'activo' },
+      include: [
+        {
+          model: User,
+          as: 'usuarios',
+          attributes: ['nombre', 'apellido'], // Ajusta los atributos según tus necesidades
+        },
+      ],
+    });
+
+    res.status(200).json(maestros);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({
+      error: 'Problemas al obtener los maestros activos',
+      message: err.message || err,
+    });
+  }
+};
 
 export const generarReporte = async (req: Request, res: Response): Promise<any> => {
-    const { fechaInicio, fechaFin } = req.query;
-  
-    try {
-      const movimientos = await MovimientoMaestro.findAll({
-        where: {
-          fechaMovimiento: {
-            [Op.between]: [new Date(fechaInicio as string), new Date(fechaFin as string)],
-          },
+  const { fechaInicio, fechaFin } = req.body;
+
+  // Validar que las fechas sean válidas
+  if (!fechaInicio || !fechaFin) {
+    return res.status(400).json({
+      error: 'Problemas al generar el reporte',
+      message: 'Las fechas de inicio y fin son requeridas',
+    });
+  }
+
+  const fechaInicioDate = new Date(fechaInicio);
+  const fechaFinDate = new Date(fechaFin);
+
+  if (isNaN(fechaInicioDate.getTime()) || isNaN(fechaFinDate.getTime())) {
+    return res.status(400).json({
+      error: 'Problemas al generar el reporte',
+      message: 'Formato de fecha inválido',
+    });
+  }
+
+  try {
+    const movimientos = await MovimientoMaestro.findAll({
+      where: {
+        fechaMovimiento: {
+          [Op.between]: [fechaInicioDate, fechaFinDate],
         },
-      });
-  
-      res.status(200).json({
-        message: 'Reporte generado con éxito',
-        movimientos: movimientos,
-      });
-    } catch (err: any) {
-      console.log(err);
-      res.status(500).json({
-        error: 'Problemas al generar el reporte',
-        message: err.message || err,
-      });
-    }
-  };
+      },
+    });
+
+    res.status(200).json({
+      message: 'Reporte generado con éxito',
+      movimientos: movimientos,
+    });
+  } catch (err: any) {
+    console.log(err);
+    res.status(500).json({
+      error: 'Problemas al generar el reporte',
+      message: err.message || err,
+    });
+  }
+};
   
   export const generarReporteMensual = async (req: Request, res: Response): Promise<any> => {
-    const { mes, año } = req.query;
-  
     try {
-      const fechaInicio = new Date(Number(año), Number(mes) - 1, 1);
-      const fechaFin = new Date(Number(año), Number(mes), 0);
+      const now = new Date();
+      const mes = now.getMonth(); // Mes actual (0-11)
+      const año = now.getFullYear(); // Año actual
+  
+      const fechaInicio = new Date(año, mes, 1);
+      const fechaFin = new Date(año, mes + 1, 0);
   
       const movimientos = await MovimientoMaestro.findAll({
         where: {

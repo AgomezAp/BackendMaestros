@@ -59,7 +59,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
 
   const token = jwt.sign(
     {
-      id: user.Uid,
+      Uid: user.Uid,
       correo: user.correo,
     },
     process.env.SECRET_KEY || "DxVj971V5CxBQGB7hDqwOenbRbbH4mrS",
@@ -69,7 +69,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
   );
   res.json({
     msg: "Usuario logeado con éxito",
-    id : user.Uid,
+    Uid : user.Uid,
     token,
   });
 };

@@ -42,6 +42,18 @@ Maestro.init({
         type: sequelize_1.DataTypes.STRING,
         defaultValue: 'activo',
     },
+    region: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
+    marca: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
+    modelo: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
 }, {
     sequelize: connection_1.default,
     modelName: 'Maestro',

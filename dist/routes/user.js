@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const user_1 = require("../controllers/user");
 const router = (0, express_1.Router)();
-router.post("/api/user/resgister", user_1.register);
+router.post("/api/user/register", user_1.register);
 router.post("/api/user/login", user_1.login);
 router.patch("/api/user/reestablecer-contrasena", user_1.restablecerContrasena);
 router.delete("/api/user/eliminar-usuario/:Uid", user_1.eliminarUsuarioId);

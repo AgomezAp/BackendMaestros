@@ -37,7 +37,18 @@ class Server {
     }
     middlewares() {
         this.app.use(express_1.default.json());
-        this.app.use((0, cors_1.default)());
+        this.app.use((0, cors_1.default)({
+            origin: '*', // Permite todas las solicitudes de origen cruzado
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
+            allowedHeaders: ['Content-Type', 'Authorization']
+        }));
+        this.app.use((req, res, next) => {
+            res.setTimeout(60000, () => {
+                console.log('Request has timed out.');
+                res.status(408).send('Request has timed out.');
+            });
+            next();
+        });
     }
     routes() {
         this.app.use(user_1.default);
