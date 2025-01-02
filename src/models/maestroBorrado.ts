@@ -4,6 +4,7 @@ import {
 } from 'sequelize';
 
 import sequelize from '../database/connection';
+import { User } from './user';
 
 export class maestroBorrado extends Model {
   public Mid!: number;
@@ -92,3 +93,5 @@ maestroBorrado.init(
     modelName: "MaestroBorrado",
   }
 );
+User.hasMany(maestroBorrado, {foreignKey: "Uid",as: "maestroBorrado"});
+maestroBorrado.belongsTo(User, {foreignKey: "Uid",as: "usuarios"});

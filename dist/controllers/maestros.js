@@ -16,16 +16,16 @@ const maestros_1 = require("../models/maestros");
 const movimientoMaestro_1 = require("../models/movimientoMaestro");
 const user_1 = require("../models/user");
 const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, apellido, correo, cedula, firma, descripcion, estado, region, marca, modelo, Uid } = req.body;
+    const { nombre, apellido, correo, cedula, firma, descripcion, estado, region, marca, modelo, Uid, } = req.body;
     try {
         const maestroExistente = yield maestros_1.Maestro.findOne({
             where: {
-                [sequelize_1.Op.or]: [{ correo }, { cedula }]
-            }
+                [sequelize_1.Op.or]: [{ correo }, { cedula }],
+            },
         });
         if (maestroExistente) {
             return res.status(400).json({
-                msg: 'El maestro ya está registrado con el correo o cédula proporcionados',
+                msg: "El maestro ya está registrado con el correo o cédula proporcionados",
             });
         }
         // Crear el nuevo maestro
@@ -44,7 +44,7 @@ const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
         yield movimientoMaestro_1.MovimientoMaestro.create({
             Mid: maestro.Mid,
-            tipoMovimiento: 'CREACION',
+            tipoMovimiento: "CREACION",
         });
         res.status(200).json({
             message: "Maestro registrado con éxito",
@@ -111,12 +111,12 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
             marca: maestro.marca,
             modelo: maestro.modelo,
             Uid: maestro.Uid,
-            estado: 'INACTIVO',
+            estado: "INACTIVO",
             deletedAt: new Date(),
         });
         yield movimientoMaestro_1.MovimientoMaestro.create({
             Mid: maestro.Mid,
-            tipoMovimiento: 'ELIMINACION',
+            tipoMovimiento: "ELIMINACION",
         });
         yield maestros_1.Maestro.destroy({ where: { Mid } });
         res.status(200).json({
@@ -158,7 +158,7 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
     catch (err) {
         console.error(err);
         res.status(500).json({
-            error: 'Problemas al actualizar el maestro',
+            error: "Problemas al actualizar el maestro",
             message: err.message || err,
         });
     }
@@ -167,12 +167,12 @@ exports.actualizarMaestro = actualizarMaestro;
 const maestrosActivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const maestros = yield maestros_1.Maestro.findAll({
-            where: { estado: 'activo' },
+            where: { estado: "activo" },
             include: [
                 {
                     model: user_1.User,
-                    as: 'usuarios',
-                    attributes: ['nombre', 'apellido'], // Ajusta los atributos según tus necesidades
+                    as: "usuarios",
+                    attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
                 },
             ],
         });
@@ -181,7 +181,7 @@ const maestrosActivos = (req, res) => __awaiter(void 0, void 0, void 0, function
     catch (err) {
         console.error(err);
         res.status(500).json({
-            error: 'Problemas al obtener los maestros activos',
+            error: "Problemas al obtener los maestros activos",
             message: err.message || err,
         });
     }
@@ -192,16 +192,16 @@ const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // Validar que las fechas sean válidas
     if (!fechaInicio || !fechaFin) {
         return res.status(400).json({
-            error: 'Problemas al generar el reporte',
-            message: 'Las fechas de inicio y fin son requeridas',
+            error: "Problemas al generar el reporte",
+            message: "Las fechas de inicio y fin son requeridas",
         });
     }
     const fechaInicioDate = new Date(fechaInicio);
     const fechaFinDate = new Date(fechaFin);
     if (isNaN(fechaInicioDate.getTime()) || isNaN(fechaFinDate.getTime())) {
         return res.status(400).json({
-            error: 'Problemas al generar el reporte',
-            message: 'Formato de fecha inválido',
+            error: "Problemas al generar el reporte",
+            message: "Formato de fecha inválido",
         });
     }
     try {
@@ -213,14 +213,14 @@ const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function*
             },
         });
         res.status(200).json({
-            message: 'Reporte generado con éxito',
+            message: "Reporte generado con éxito",
             movimientos: movimientos,
         });
     }
     catch (err) {
         console.log(err);
         res.status(500).json({
-            error: 'Problemas al generar el reporte',
+            error: "Problemas al generar el reporte",
             message: err.message || err,
         });
     }
@@ -241,14 +241,14 @@ const generarReporteMensual = (req, res) => __awaiter(void 0, void 0, void 0, fu
             },
         });
         res.status(200).json({
-            message: 'Reporte mensual generado con éxito',
+            message: "Reporte mensual generado con éxito",
             movimientos: movimientos,
         });
     }
     catch (err) {
         console.log(err);
         res.status(500).json({
-            error: 'Problemas al generar el reporte mensual',
+            error: "Problemas al generar el reporte mensual",
             message: err.message || err,
         });
     }
@@ -257,20 +257,36 @@ exports.generarReporteMensual = generarReporteMensual;
 const obtenerTodosLosMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Obtener maestros activos
-        const maestrosActivos = yield maestros_1.Maestro.findAll();
+        const maestrosActivos = yield maestros_1.Maestro.findAll({
+            include: [
+                {
+                    model: user_1.User,
+                    as: "usuarios",
+                    attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
+                },
+            ],
+        });
         // Obtener maestros inactivos
-        const maestrosInactivos = yield maestroBorrado_1.maestroBorrado.findAll();
+        const maestrosInactivos = yield maestroBorrado_1.maestroBorrado.findAll({
+            include: [
+                {
+                    model: user_1.User,
+                    as: "usuarios",
+                    attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
+                },
+            ],
+        });
         // Combinar los resultados
         const todosLosMaestros = [...maestrosActivos, ...maestrosInactivos];
         res.status(200).json({
-            message: 'Lista de todos los maestros (activos e inactivos)',
+            message: "Lista de todos los maestros (activos e inactivos)",
             maestros: todosLosMaestros,
         });
     }
     catch (err) {
         console.error(err);
         res.status(500).json({
-            error: 'Problemas al obtener la lista de maestros',
+            error: "Problemas al obtener la lista de maestros",
             message: err.message || err,
         });
     }

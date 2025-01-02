@@ -55,7 +55,7 @@ class Server {
         /* {force: true}{alter: true} */
       await sequelize.authenticate();
       await User.sync({alter: true});
-      await Maestro.sync({alter: true}  );
+      await Maestro.sync({alter: true});
       await MovimientoMaestro.sync({alter: true});
       await maestroBorrado.sync({alter: true});
       console.log("Conexión a la base de datos exitosa");

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.maestroBorrado = void 0;
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("../database/connection"));
+const user_1 = require("./user");
 class maestroBorrado extends sequelize_1.Model {
 }
 exports.maestroBorrado = maestroBorrado;
@@ -62,3 +63,5 @@ maestroBorrado.init({
     sequelize: connection_1.default,
     modelName: "MaestroBorrado",
 });
+user_1.User.hasMany(maestroBorrado, { foreignKey: "Uid", as: "maestroBorrado" });
+maestroBorrado.belongsTo(user_1.User, { foreignKey: "Uid", as: "usuarios" });
