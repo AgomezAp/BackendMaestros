@@ -1,5 +1,8 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { Application } from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
 import sequelize from '../database/connection';
 import RMaestros from '../routes/maestros';
@@ -30,6 +33,7 @@ class Server {
   }
   middlewares() {
     this.app.use(express.json())
+    this.app.use(helmet());
     this.app.use(cors({
         origin: '*', // Permite todas las solicitudes de origen cruzado
         methods: ['GET', 'POST', 'PUT', 'DELETE','PATCH'], // Métodos permitidos
@@ -42,6 +46,26 @@ class Server {
         });
         next();
     });
+
+    this.app.use(cookieParser());
+
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 100, // Limita cada IP a 100 peticiones por ventana de 15 minutos
+      message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo después de 15 minutos'
+    });
+    this.app.use(limiter);
+
+    // Protección contra CSRF
+
+    this.app.use((req, res, next) => {
+      res.setTimeout(60000, () => { // 1 minuto
+        console.log('Request has timed out.');
+        res.status(408).send('Request has timed out.');
+      });
+      next();
+    });
+
   }
   routes() {
     this.app.use(RUser);

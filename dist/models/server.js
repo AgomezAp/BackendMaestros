@@ -12,8 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
+const helmet_1 = __importDefault(require("helmet"));
 const connection_1 = __importDefault(require("../database/connection"));
 const maestros_1 = __importDefault(require("../routes/maestros"));
 const user_1 = __importDefault(require("../routes/user"));
@@ -37,11 +40,27 @@ class Server {
     }
     middlewares() {
         this.app.use(express_1.default.json());
+        this.app.use((0, helmet_1.default)());
         this.app.use((0, cors_1.default)({
             origin: '*', // Permite todas las solicitudes de origen cruzado
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
             allowedHeaders: ['Content-Type', 'Authorization']
         }));
+        this.app.use((req, res, next) => {
+            res.setTimeout(60000, () => {
+                console.log('Request has timed out.');
+                res.status(408).send('Request has timed out.');
+            });
+            next();
+        });
+        this.app.use((0, cookie_parser_1.default)());
+        const limiter = (0, express_rate_limit_1.default)({
+            windowMs: 15 * 60 * 1000, // 15 minutos
+            max: 100, // Limita cada IP a 100 peticiones por ventana de 15 minutos
+            message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo después de 15 minutos'
+        });
+        this.app.use(limiter);
+        // Protección contra CSRF
         this.app.use((req, res, next) => {
             res.setTimeout(60000, () => {
                 console.log('Request has timed out.');
