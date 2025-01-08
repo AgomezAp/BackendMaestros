@@ -21,5 +21,5 @@ router.patch("/api/maestros/actualizar-maestro/:Mid",validateToken,actualizarMae
 router.post('/api/maestros/reporte',validateToken ,generarReporte);
 router.get('/api/maestros/reporte-mensual', validateToken,generarReporteMensual);
 router.get('/api/maestros/obtenerRecordMaestros',validateToken ,obtenerTodosLosMaestros);
-router.get('/api/maestros/activos', maestrosActivos);
+router.get('/api/maestros/activos',validateToken, maestrosActivos);
 export default router;

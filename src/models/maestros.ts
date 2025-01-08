@@ -45,7 +45,7 @@ Maestro.init(
       allowNull: false,
     },
     descripcion: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT("long"),
     },
 
     Uid: {

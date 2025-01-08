@@ -33,7 +33,7 @@ Maestro.init({
         allowNull: false,
     },
     descripcion: {
-        type: sequelize_1.DataTypes.STRING,
+        type: sequelize_1.DataTypes.TEXT("long"),
     },
     Uid: {
         type: sequelize_1.DataTypes.INTEGER
