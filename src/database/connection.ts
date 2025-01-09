@@ -1,8 +1,31 @@
+import dotenv from 'dotenv';
 import { Sequelize } from 'sequelize';
 
-const sequelize = new Sequelize('api_maestros','root','1234',{
-    host: 'localhost',
-    dialect: 'mysql'
-})
+dotenv.config();
+
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not defined in the environment variables');
+}
+
+const sequelize = new Sequelize(databaseUrl, {
+  dialect: 'postgres',
+  protocol: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Esto es necesario para algunas configuraciones de PostgreSQL en Railway
+    },
+  },
+});
+
+sequelize.authenticate()
+  .then(() => {
+    console.log('Database connected successfully.');
+  })
+  .catch((error) => {
+    console.error('Unable to connect to the database:', error);
+  });
 
 export default sequelize;
