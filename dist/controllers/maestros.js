@@ -136,7 +136,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.borrarMaestrosPorId = borrarMaestrosPorId;
 const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, region } = req.body;
+    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, region, estado } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -152,6 +152,7 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
             cedula,
             firma,
             region,
+            estado,
             descripcion,
         }, { where: { Mid } });
         res.status(200).json({

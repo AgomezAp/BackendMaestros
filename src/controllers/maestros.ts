@@ -162,7 +162,7 @@ export const actualizarMaestro = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { nombre, apellido,NombreMaestro ,correo, cedula, firma, descripcion, region } =
+  const { nombre, apellido,NombreMaestro ,correo, cedula, firma, descripcion, region, estado} =
     req.body;
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -181,6 +181,7 @@ export const actualizarMaestro = async (
         cedula,
         firma,
         region,
+        estado,
         descripcion,
       },
       { where: { Mid } }
