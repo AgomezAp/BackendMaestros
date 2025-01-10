@@ -8,6 +8,7 @@ import { User } from './user';
 
 export class Maestro extends Model {
   public Mid!: number;
+  public NombreMaestro!: string;
   public nombre!: string;
   public apellido!: string;
   public correo!: string;
@@ -32,6 +33,9 @@ Maestro.init(
       type: DataTypes.STRING,
     },
     apellido: {
+      type: DataTypes.STRING,
+    },
+    NombreMaestro: {
       type: DataTypes.STRING,
     },
     correo: {

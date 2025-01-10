@@ -22,6 +22,9 @@ Maestro.init({
     apellido: {
         type: sequelize_1.DataTypes.STRING,
     },
+    NombreMaestro: {
+        type: sequelize_1.DataTypes.STRING,
+    },
     correo: {
         type: sequelize_1.DataTypes.STRING,
     },

@@ -16,6 +16,7 @@ export const registrarMaestro = async (
   const {
     nombre,
     apellido,
+    NombreMaestro,
     correo,
     cedula,
     firma,
@@ -43,6 +44,7 @@ export const registrarMaestro = async (
     const maestro = await Maestro.create({
       nombre,
       apellido,
+      NombreMaestro,
       correo,
       cedula,
       firma,
@@ -124,6 +126,7 @@ export const borrarMaestrosPorId = async (
       Mid: maestro.Mid,
       nombre: maestro.nombre,
       apellido: maestro.apellido,
+      NombreMaestro: maestro.NombreMaestro,
       correo: maestro.correo,
       cedula: maestro.cedula,
       firma: maestro.firma,
@@ -159,7 +162,7 @@ export const actualizarMaestro = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { nombre, apellido, correo, cedula, firma, descripcion, region } =
+  const { nombre, apellido,NombreMaestro ,correo, cedula, firma, descripcion, region } =
     req.body;
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -173,6 +176,7 @@ export const actualizarMaestro = async (
       {
         nombre,
         apellido,
+        NombreMaestro,
         correo,
         cedula,
         firma,

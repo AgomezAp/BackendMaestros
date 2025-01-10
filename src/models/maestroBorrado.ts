@@ -8,6 +8,7 @@ import { User } from './user';
 
 export class maestroBorrado extends Model {
   public Mid!: number;
+  public NombreMaestro!: string;
   public nombre!: string;
   public apellido!: string;
   public correo!: string;
@@ -43,7 +44,11 @@ maestroBorrado.init(
 
       allowNull: false,
     },
+    NombreMaestro: {
+      type: DataTypes.STRING,
 
+      allowNull: false, 
+    },
     correo: {
       type: DataTypes.STRING,
 

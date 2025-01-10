@@ -24,6 +24,10 @@ maestroBorrado.init({
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,
     },
+    NombreMaestro: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
     correo: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: false,

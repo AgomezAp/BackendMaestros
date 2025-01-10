@@ -16,7 +16,7 @@ const maestros_1 = require("../models/maestros");
 const movimientoMaestro_1 = require("../models/movimientoMaestro");
 const user_1 = require("../models/user");
 const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, apellido, correo, cedula, firma, descripcion, estado, region, marca, modelo, Uid, } = req.body;
+    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, estado, region, marca, modelo, Uid, } = req.body;
     try {
         const maestroExistente = yield maestros_1.Maestro.findOne({
             where: {
@@ -32,6 +32,7 @@ const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const maestro = yield maestros_1.Maestro.create({
             nombre,
             apellido,
+            NombreMaestro,
             correo,
             cedula,
             firma,
@@ -103,6 +104,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
             Mid: maestro.Mid,
             nombre: maestro.nombre,
             apellido: maestro.apellido,
+            NombreMaestro: maestro.NombreMaestro,
             correo: maestro.correo,
             cedula: maestro.cedula,
             firma: maestro.firma,
@@ -134,7 +136,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.borrarMaestrosPorId = borrarMaestrosPorId;
 const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { nombre, apellido, correo, cedula, firma, descripcion, region } = req.body;
+    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, region } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -145,6 +147,7 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
         yield maestros_1.Maestro.update({
             nombre,
             apellido,
+            NombreMaestro,
             correo,
             cedula,
             firma,
