@@ -1,11 +1,15 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const user_1 = require("../controllers/user");
+const validateToken_1 = __importDefault(require("./validateToken"));
 const router = (0, express_1.Router)();
 router.post("/api/user/register", user_1.register);
 router.post("/api/user/login", user_1.login);
 router.patch("/api/user/reestablecer-contrasena", user_1.restablecerContrasena);
 router.delete("/api/user/eliminar-usuario/:Uid", user_1.eliminarUsuarioId);
-router.get("/api/user/:Uid/maestros", user_1.obtenerMaestrosPorIdUsuario);
+router.get("/api/user/:Uid/maestros", validateToken_1.default, user_1.obtenerMaestrosPorIdUsuario);
 exports.default = router;

@@ -12,10 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
-const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const helmet_1 = __importDefault(require("helmet"));
 const connection_1 = __importDefault(require("../database/connection"));
 const maestros_1 = __importDefault(require("../routes/maestros"));
@@ -24,6 +23,7 @@ const maestroBorrado_1 = require("./maestroBorrado");
 const maestros_2 = require("./maestros");
 const movimientoMaestro_1 = require("./movimientoMaestro");
 const user_2 = require("./user");
+dotenv_1.default.config();
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -42,32 +42,38 @@ class Server {
         this.app.use(express_1.default.json());
         this.app.use((0, helmet_1.default)());
         this.app.use((0, cors_1.default)({
-            origin: '*', // Permite todas las solicitudes de origen cruzado
-            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Métodos permitidos
-            allowedHeaders: ['Content-Type', 'Authorization']
+            origin: "*", // Permite todas las solicitudes de origen cruzado
+            methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Métodos permitidos
+            allowedHeaders: ["Content-Type", "Authorization"],
         }));
         this.app.use((req, res, next) => {
             res.setTimeout(60000, () => {
-                console.log('Request has timed out.');
-                res.status(408).send('Request has timed out.');
+                // 2 minutos
+                console.log("Request has timed out.");
+                res.status(408).send("Request has timed out.");
             });
             next();
         });
-        this.app.use((0, cookie_parser_1.default)());
-        const limiter = (0, express_rate_limit_1.default)({
-            windowMs: 15 * 60 * 1000, // 15 minutos
-            max: 100, // Limita cada IP a 100 peticiones por ventana de 15 minutos
-            message: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo después de 15 minutos'
-        });
-        this.app.use(limiter);
-        // Protección contra CSRF
-        this.app.use((req, res, next) => {
-            res.setTimeout(60000, () => {
-                console.log('Request has timed out.');
-                res.status(408).send('Request has timed out.');
-            });
-            next();
-        });
+        /*  this.app.use(cookieParser());
+     
+         const limiter = rateLimit({
+           windowMs: 15 * 60 * 1000, // 15 minutos
+           max: 100, // Limita cada IP a 100 peticiones por ventana de 15 minutos
+           message:
+             "Demasiadas peticiones desde esta IP, por favor intenta de nuevo después de 15 minutos",
+         });
+         this.app.use(limiter);
+     
+         // Protección contra CSRF
+     
+         this.app.use((req, res, next) => {
+           res.setTimeout(60000, () => {
+             // 1 minuto
+             console.log("Request has timed out.");
+             res.status(408).send("Request has timed out.");
+           });
+           next();
+         }); */
     }
     routes() {
         this.app.use(user_1.default);
