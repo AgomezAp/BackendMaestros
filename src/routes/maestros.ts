@@ -8,6 +8,7 @@ import {
   maestrosActivos,
   ObtenerMaestros,
   obtenerTodosLosMaestros,
+  reactivarMaestro,
   registrarMaestro,
 } from '../controllers/maestros';
 import validateToken from './validateToken';
@@ -19,6 +20,7 @@ router.get("/api/maestros/obtener-maestros",validateToken,ObtenerMaestros);
 router.delete("/api/maestros/borrar-maestro/:Mid",validateToken,borrarMaestrosPorId);
 router.patch("/api/maestros/actualizar-maestro/:Mid",validateToken,actualizarMaestro);
 router.post('/api/maestros/reporte',validateToken ,generarReporte);
+router.delete('/api/maestros/reactivar-maestro/:Mid',validateToken ,reactivarMaestro);
 router.get('/api/maestros/reporte-mensual', validateToken,generarReporteMensual);
 router.get('/api/maestros/obtenerRecordMaestros',validateToken ,obtenerTodosLosMaestros);
 router.get('/api/maestros/activos',validateToken, maestrosActivos);

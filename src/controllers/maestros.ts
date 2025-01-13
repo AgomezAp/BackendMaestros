@@ -302,7 +302,51 @@ export const generarReporteMensual = async (
     });
   }
 };
+export const reactivarMaestro = async (req: Request, res: Response): Promise<any> =>{
+  const { Mid } = req.params;
 
+  try {
+    // Buscar el maestro en la tabla maestros_borrados
+    const maestroInactivo = await maestroBorrado.findOne({ where: { Mid } });
+
+    if (!maestroInactivo) {
+      return res.status(404).json({
+        error: 'Maestro no encontrado en la tabla de maestros inactivos',
+      });
+    }
+
+    // Mover el maestro a la tabla maestros
+    const maestroActivo = await Maestro.create({
+      Mid: maestroInactivo.Mid,
+      nombre: maestroInactivo.nombre,
+      apellido: maestroInactivo.apellido,
+      NombreMaestro: maestroInactivo.NombreMaestro,
+      correo: maestroInactivo.correo,
+      cedula: maestroInactivo.cedula,
+      firma: maestroInactivo.firma,
+      descripcion: maestroInactivo.descripcion,
+      Uid: maestroInactivo.Uid,
+      estado: 'activo',
+      region : maestroInactivo.region,
+      marca : maestroInactivo.marca,
+      modelo : maestroInactivo.modelo
+    });
+
+    // Eliminar el maestro de la tabla maestros_borrados
+    await maestroBorrado.destroy({ where: { Mid } });
+
+    res.status(200).json({
+      message: 'Maestro reactivado exitosamente',
+      maestro: maestroActivo,
+    });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({
+      error: 'Problemas al reactivar el maestro',
+      message: err.message || err,
+    });
+  }
+};
 export const obtenerTodosLosMaestros = async (
   req: Request,
   res: Response

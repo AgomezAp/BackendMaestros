@@ -12,6 +12,7 @@ router.get("/api/maestros/obtener-maestros", validateToken_1.default, maestros_1
 router.delete("/api/maestros/borrar-maestro/:Mid", validateToken_1.default, maestros_1.borrarMaestrosPorId);
 router.patch("/api/maestros/actualizar-maestro/:Mid", validateToken_1.default, maestros_1.actualizarMaestro);
 router.post('/api/maestros/reporte', validateToken_1.default, maestros_1.generarReporte);
+router.delete('/api/maestros/reactivar-maestro/:Mid', validateToken_1.default, maestros_1.reactivarMaestro);
 router.get('/api/maestros/reporte-mensual', validateToken_1.default, maestros_1.generarReporteMensual);
 router.get('/api/maestros/obtenerRecordMaestros', validateToken_1.default, maestros_1.obtenerTodosLosMaestros);
 router.get('/api/maestros/activos', validateToken_1.default, maestros_1.maestrosActivos);

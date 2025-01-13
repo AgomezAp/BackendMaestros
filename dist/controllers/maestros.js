@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.obtenerTodosLosMaestros = exports.generarReporteMensual = exports.generarReporte = exports.maestrosActivos = exports.actualizarMaestro = exports.borrarMaestrosPorId = exports.ObtenerMaestrPorId = exports.ObtenerMaestros = exports.registrarMaestro = void 0;
+exports.obtenerTodosLosMaestros = exports.reactivarMaestro = exports.generarReporteMensual = exports.generarReporte = exports.maestrosActivos = exports.actualizarMaestro = exports.borrarMaestrosPorId = exports.ObtenerMaestrPorId = exports.ObtenerMaestros = exports.registrarMaestro = void 0;
 const sequelize_1 = require("sequelize");
 const maestroBorrado_1 = require("../models/maestroBorrado");
 const maestros_1 = require("../models/maestros");
@@ -258,6 +258,48 @@ const generarReporteMensual = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.generarReporteMensual = generarReporteMensual;
+const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { Mid } = req.params;
+    try {
+        // Buscar el maestro en la tabla maestros_borrados
+        const maestroInactivo = yield maestroBorrado_1.maestroBorrado.findOne({ where: { Mid } });
+        if (!maestroInactivo) {
+            return res.status(404).json({
+                error: 'Maestro no encontrado en la tabla de maestros inactivos',
+            });
+        }
+        // Mover el maestro a la tabla maestros
+        const maestroActivo = yield maestros_1.Maestro.create({
+            Mid: maestroInactivo.Mid,
+            nombre: maestroInactivo.nombre,
+            apellido: maestroInactivo.apellido,
+            NombreMaestro: maestroInactivo.NombreMaestro,
+            correo: maestroInactivo.correo,
+            cedula: maestroInactivo.cedula,
+            firma: maestroInactivo.firma,
+            descripcion: maestroInactivo.descripcion,
+            Uid: maestroInactivo.Uid,
+            estado: 'activo',
+            region: maestroInactivo.region,
+            marca: maestroInactivo.marca,
+            modelo: maestroInactivo.modelo
+        });
+        // Eliminar el maestro de la tabla maestros_borrados
+        yield maestroBorrado_1.maestroBorrado.destroy({ where: { Mid } });
+        res.status(200).json({
+            message: 'Maestro reactivado exitosamente',
+            maestro: maestroActivo,
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            error: 'Problemas al reactivar el maestro',
+            message: err.message || err,
+        });
+    }
+});
+exports.reactivarMaestro = reactivarMaestro;
 const obtenerTodosLosMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Obtener maestros activos
