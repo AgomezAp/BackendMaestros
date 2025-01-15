@@ -10,9 +10,6 @@ export class maestroBorrado extends Model {
   public Mid!: number;
   public NombreMaestro!: string;
   public nombre!: string;
-  public apellido!: string;
-  public correo!: string;
-  public cedula!: string;
   public firma!: string;
   public estado!: string;
   public descripcion!: string;
@@ -20,6 +17,8 @@ export class maestroBorrado extends Model {
   public region!: string;
   public marca!: string;
   public modelo!: string;
+  public imei!: string;
+  public fecha!: Date;
   public tipoMovimiento!: string;
 }
 
@@ -39,26 +38,11 @@ maestroBorrado.init(
       allowNull: false,
     },
 
-    apellido: {
-      type: DataTypes.STRING,
 
-      allowNull: false,
-    },
     NombreMaestro: {
       type: DataTypes.STRING,
 
       allowNull: false, 
-    },
-    correo: {
-      type: DataTypes.STRING,
-
-      allowNull: false,
-    },
-
-    cedula: {
-      type: DataTypes.STRING,
-
-      allowNull: false,
     },
 
     firma: {
@@ -88,6 +72,14 @@ maestroBorrado.init(
     },
     modelo: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+    imei: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    fecha: {
+      type: DataTypes.DATE,
       allowNull: true,
     },
   },

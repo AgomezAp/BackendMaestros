@@ -6,7 +6,7 @@ import {
 import sequelize from '../database/connection';
 import { User } from './user';
 
-export class Maestro extends Model {
+export class MaestroEntregado extends Model {
   public Mid!: number;
   public NombreMaestro!: string;
   public nombre!: string;
@@ -21,7 +21,7 @@ export class Maestro extends Model {
   public fecha !: Date;
 }
 
-Maestro.init(
+MaestroEntregado.init(
   {
     Mid: {
       type: DataTypes.INTEGER,
@@ -77,5 +77,5 @@ Maestro.init(
     timestamps: false,
   }
 );
-User.hasMany(Maestro, {foreignKey: "Uid",as: "maestros"});
-Maestro.belongsTo(User, {foreignKey: "Uid",as: "usuarios"});
+User.hasMany(MaestroEntregado, {foreignKey: "Uid",as: "maestros"});
+MaestroEntregado.belongsTo(User, {foreignKey: "Uid",as: "usuarios"});

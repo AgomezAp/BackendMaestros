@@ -5,6 +5,7 @@ import {
 import { Op } from 'sequelize';
 
 import { maestroBorrado } from '../models/maestroBorrado';
+import { MaestroEntregado } from '../models/maestroEntregados';
 import { Maestro } from '../models/maestros';
 import { MovimientoMaestro } from '../models/movimientoMaestro';
 import { User } from '../models/user';
@@ -15,44 +16,31 @@ export const registrarMaestro = async (
 ): Promise<any> => {
   const {
     nombre,
-    apellido,
     NombreMaestro,
-    correo,
-    cedula,
     firma,
     descripcion,
     estado,
     region,
     marca,
     modelo,
+    imei,
+    fecha,
     Uid,
   } = req.body;
   try {
-    const maestroExistente = await Maestro.findOne({
-      where: {
-        [Op.or]: [{ correo }, { cedula }],
-      },
-    });
-
-    if (maestroExistente) {
-      return res.status(400).json({
-        msg: "El maestro ya está registrado con el correo o cédula proporcionados",
-      });
-    }
 
     // Crear el nuevo maestro
     const maestro = await Maestro.create({
       nombre,
-      apellido,
       NombreMaestro,
-      correo,
-      cedula,
       firma,
       descripcion,
       estado,
       region,
       marca,
       modelo,
+      imei,
+      fecha,
       Uid,
     });
 
@@ -114,6 +102,7 @@ export const borrarMaestrosPorId = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
+  const { firma, descripcion } = req.body;
   try {
     const maestro = await Maestro.findByPk(Mid);
 
@@ -125,19 +114,34 @@ export const borrarMaestrosPorId = async (
     await maestroBorrado.create({
       Mid: maestro.Mid,
       nombre: maestro.nombre,
-      apellido: maestro.apellido,
       NombreMaestro: maestro.NombreMaestro,
-      correo: maestro.correo,
-      cedula: maestro.cedula,
       firma: maestro.firma,
       descripcion: maestro.descripcion,
       region: maestro.region,
       marca: maestro.marca,
       modelo: maestro.modelo,
+      imei: maestro.imei,
+      fecha: maestro.fecha,
       Uid: maestro.Uid,
       estado: "INACTIVO",
       deletedAt: new Date(),
     });
+
+    await MaestroEntregado.create({
+      Mid: maestro.Mid,
+      nombre: maestro.nombre,
+      NombreMaestro: maestro.NombreMaestro,
+      firma: firma, // Firma proporcionada por el usuario
+      descripcion: descripcion, 
+      region: maestro.region,
+      marca: maestro.marca,
+      modelo: maestro.modelo,
+      imei: maestro.imei,
+      Uid: maestro.Uid,
+      estado: "Entregado",
+      fecha: new Date(),
+    })
+
 
     await MovimientoMaestro.create({
       Mid: maestro.Mid,
@@ -162,7 +166,7 @@ export const actualizarMaestro = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { nombre, apellido,NombreMaestro ,correo, cedula, firma, descripcion, region, estado} =
+  const { nombre,NombreMaestro , firma, descripcion, region, estado} =
     req.body;
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -175,10 +179,7 @@ export const actualizarMaestro = async (
     await Maestro.update(
       {
         nombre,
-        apellido,
         NombreMaestro,
-        correo,
-        cedula,
         firma,
         region,
         estado,
@@ -319,17 +320,16 @@ export const reactivarMaestro = async (req: Request, res: Response): Promise<any
     const maestroActivo = await Maestro.create({
       Mid: maestroInactivo.Mid,
       nombre: maestroInactivo.nombre,
-      apellido: maestroInactivo.apellido,
       NombreMaestro: maestroInactivo.NombreMaestro,
-      correo: maestroInactivo.correo,
-      cedula: maestroInactivo.cedula,
       firma: maestroInactivo.firma,
       descripcion: maestroInactivo.descripcion,
       Uid: maestroInactivo.Uid,
       estado: 'activo',
       region : maestroInactivo.region,
       marca : maestroInactivo.marca,
-      modelo : maestroInactivo.modelo
+      modelo : maestroInactivo.modelo,
+      imei: maestroInactivo.imei,
+      fecha: maestroInactivo.fecha,
     });
 
     // Eliminar el maestro de la tabla maestros_borrados
