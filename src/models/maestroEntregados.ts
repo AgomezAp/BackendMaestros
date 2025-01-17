@@ -21,7 +21,8 @@ export class MaestroEntregado extends Model {
   public marca!: string;
   public modelo!: string;
   public imei!: string;
-  public fecha !: Date;
+  public fechaRecibe !: Date;
+  public fechaEntrega !: Date;
 }
 
 MaestroEntregado.init(

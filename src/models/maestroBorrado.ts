@@ -21,7 +21,8 @@ export class maestroBorrado extends Model {
   public marca!: string;
   public modelo!: string;
   public imei!: string;
-  public fecha!: Date;
+  public fechaRecibe !: Date;
+  public fechaEntrega !: Date;
   public tipoMovimiento!: string;
 }
 
@@ -90,7 +91,11 @@ maestroBorrado.init(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    fecha: {
+    fechaRecibe: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    fechaEntrega: {
       type: DataTypes.DATE,
       allowNull: true,
     },

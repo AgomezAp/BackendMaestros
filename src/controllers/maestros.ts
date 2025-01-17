@@ -23,7 +23,7 @@ export const registrarMaestro = async (
     marca,
     modelo,
     imei,
-    fecha,
+    fechaRecibe,
     Uid,
   } = req.body;
   try {
@@ -38,7 +38,7 @@ export const registrarMaestro = async (
       marca,
       modelo,
       imei,
-      fecha,
+      fechaRecibe,
       Uid,
     });
 
@@ -100,7 +100,7 @@ export const borrarMaestrosPorId = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { firmaRecibe, descripcionRecibe,maestroRecibido } = req.body;
+  const { firmaRecibe, descripcionRecibe,maestroRecibido,fechaEntrega } = req.body;
 
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -125,7 +125,8 @@ export const borrarMaestrosPorId = async (
       marca: maestro.marca,
       modelo: maestro.modelo,
       imei: maestro.imei,
-      fecha: maestro.fecha,
+      fechaRecibe: maestro.fechaRecibe,
+      fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
       Uid: maestro.Uid,
       estado: "Entregado",
       deletedAt: new Date(),
@@ -325,7 +326,8 @@ export const reactivarMaestro = async (
       marca: maestroInactivo.marca,
       modelo: maestroInactivo.modelo,
       imei: maestroInactivo.imei,
-      fecha: maestroInactivo.fecha,
+      fechaRecibe: maestroInactivo.fechaRecibe,
+      fechaEntrega: maestroInactivo.fechaEntrega,
     });
 
     // Eliminar el maestro de la tabla maestros_borrados

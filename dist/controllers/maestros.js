@@ -16,7 +16,7 @@ const maestros_1 = require("../models/maestros");
 const movimientoMaestro_1 = require("../models/movimientoMaestro");
 const user_1 = require("../models/user");
 const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, NombreMaestro, firmaEntrega, descripcionEntrega, estado, region, marca, modelo, imei, fecha, Uid, } = req.body;
+    const { nombre, NombreMaestro, firmaEntrega, descripcionEntrega, estado, region, marca, modelo, imei, fechaRecibe, Uid, } = req.body;
     try {
         // Crear el nuevo maestro
         const maestro = yield maestros_1.Maestro.create({
@@ -29,7 +29,7 @@ const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
             marca,
             modelo,
             imei,
-            fecha,
+            fechaRecibe,
             Uid,
         });
         yield movimientoMaestro_1.MovimientoMaestro.create({
@@ -82,7 +82,7 @@ const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.ObtenerMaestrPorId = ObtenerMaestrPorId;
 const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { firmaRecibe, descripcionRecibe, maestroRecibido } = req.body;
+    const { firmaRecibe, descripcionRecibe, maestroRecibido, fechaEntrega } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -104,7 +104,8 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
             marca: maestro.marca,
             modelo: maestro.modelo,
             imei: maestro.imei,
-            fecha: maestro.fecha,
+            fechaRecibe: maestro.fechaRecibe,
+            fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
             Uid: maestro.Uid,
             estado: "Entregado",
             deletedAt: new Date(),
@@ -275,7 +276,8 @@ const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
             marca: maestroInactivo.marca,
             modelo: maestroInactivo.modelo,
             imei: maestroInactivo.imei,
-            fecha: maestroInactivo.fecha,
+            fechaRecibe: maestroInactivo.fechaRecibe,
+            fechaEntrega: maestroInactivo.fechaEntrega,
         });
         // Eliminar el maestro de la tabla maestros_borrados
         yield maestroBorrado_1.maestroBorrado.destroy({ where: { Mid } });
