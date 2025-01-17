@@ -67,11 +67,11 @@ Maestro.init({
         allowNull: true,
     },
     fechaRecibe: {
-        type: sequelize_1.DataTypes.DATE,
+        type: sequelize_1.DataTypes.DATEONLY,
         allowNull: true,
     },
     fechaEntrega: {
-        type: sequelize_1.DataTypes.DATE,
+        type: sequelize_1.DataTypes.DATEONLY,
         allowNull: true,
     },
 }, {

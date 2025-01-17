@@ -62,7 +62,7 @@ MaestroEntregado.init({
         allowNull: true,
     },
     fecha: {
-        type: sequelize_1.DataTypes.DATE,
+        type: sequelize_1.DataTypes.DATEONLY,
         allowNull: true,
     },
 }, {

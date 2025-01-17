@@ -79,7 +79,7 @@ MaestroEntregado.init(
       allowNull: true,
     },
     fecha: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
   },

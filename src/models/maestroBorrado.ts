@@ -92,11 +92,11 @@ maestroBorrado.init(
       allowNull: true,
     },
     fechaRecibe: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
     fechaEntrega: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
     },
   },
