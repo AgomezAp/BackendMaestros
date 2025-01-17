@@ -10,7 +10,12 @@ import { User } from '../models/user';
 
 export const register = async (req: Request, res: Response): Promise<any> => {
   const { nombre, apellido, correo, contrasena } = req.body;
-
+  const emailDomain = correo.split('@')[1];
+  if (emailDomain !== 'andrespublicidadtg.com') {
+    return res.status(400).json({
+      msg: 'Correo no valido',
+    });
+  }
   // Verificar si el usuario ya existe
   const userOne = await User.findOne({ where: { correo: correo } });
   if (userOne) {

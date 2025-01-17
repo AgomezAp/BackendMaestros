@@ -9,9 +9,12 @@ import { User } from './user';
 export class MaestroEntregado extends Model {
   public Mid!: number;
   public NombreMaestro!: string;
+  public maestroRecibido!: string;
   public nombre!: string;
-  public firma!: string;
-  public descripcion!: string;
+  public firmaEntrega!: string;
+  public firmaRecibe!: string;
+  public descripcionEntrega!: string;
+  public descripcionRecibe!: string;
   public Uid!: number;
   public estado!: string;
   public region!: string;
@@ -35,14 +38,22 @@ MaestroEntregado.init(
     NombreMaestro: {
       type: DataTypes.STRING,
     },
+    maestroRecibido:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
     firma: {
       type: DataTypes.TEXT("long"),
       allowNull: false,
     },
-    descripcion: {
+    descripcionEntrega: {
       type: DataTypes.TEXT("long"),
+      allowNull: true
     },
-
+    descripcionRecibe: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true
+    },
     Uid: {
       type: DataTypes.INTEGER
     },
@@ -77,5 +88,5 @@ MaestroEntregado.init(
     timestamps: false,
   }
 );
-User.hasMany(MaestroEntregado, {foreignKey: "Uid",as: "maestros"});
+User.hasMany(MaestroEntregado, {foreignKey: "Uid",as: "maestroEntregado"});
 MaestroEntregado.belongsTo(User, {foreignKey: "Uid",as: "usuarios"});

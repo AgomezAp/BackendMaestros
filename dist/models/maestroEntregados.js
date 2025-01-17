@@ -3,38 +3,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.maestroBorrado = void 0;
+exports.MaestroEntregado = void 0;
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("../database/connection"));
 const user_1 = require("./user");
-class maestroBorrado extends sequelize_1.Model {
+class MaestroEntregado extends sequelize_1.Model {
 }
-exports.maestroBorrado = maestroBorrado;
-maestroBorrado.init({
+exports.MaestroEntregado = MaestroEntregado;
+MaestroEntregado.init({
     Mid: {
         type: sequelize_1.DataTypes.INTEGER,
-        autoIncrement: true,
         primaryKey: true,
+        autoIncrement: true,
     },
     nombre: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
     },
     NombreMaestro: {
         type: sequelize_1.DataTypes.STRING,
-        allowNull: false,
     },
     maestroRecibido: {
         type: sequelize_1.DataTypes.STRING,
         allowNull: true
     },
-    firmaEntrega: {
+    firma: {
         type: sequelize_1.DataTypes.TEXT("long"),
-        allowNull: true,
-    },
-    firmaRecibe: {
-        type: sequelize_1.DataTypes.TEXT("long"),
-        allowNull: true,
+        allowNull: false,
     },
     descripcionEntrega: {
         type: sequelize_1.DataTypes.TEXT("long"),
@@ -45,7 +39,7 @@ maestroBorrado.init({
         allowNull: true
     },
     Uid: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: sequelize_1.DataTypes.INTEGER
     },
     estado: {
         type: sequelize_1.DataTypes.STRING,
@@ -73,7 +67,8 @@ maestroBorrado.init({
     },
 }, {
     sequelize: connection_1.default,
-    modelName: "MaestroBorrado",
+    modelName: 'Maestro',
+    timestamps: false,
 });
-user_1.User.hasMany(maestroBorrado, { foreignKey: "Uid", as: "maestroBorrado" });
-maestroBorrado.belongsTo(user_1.User, { foreignKey: "Uid", as: "usuarios" });
+user_1.User.hasMany(MaestroEntregado, { foreignKey: "Uid", as: "maestroEntregado" });
+MaestroEntregado.belongsTo(user_1.User, { foreignKey: "Uid", as: "usuarios" });

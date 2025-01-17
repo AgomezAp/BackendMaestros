@@ -9,9 +9,12 @@ import { User } from './user';
 export class Maestro extends Model {
   public Mid!: number;
   public NombreMaestro!: string;
+  public maestroRecibido!: string;
   public nombre!: string;
-  public firma!: string;
-  public descripcion!: string;
+  public firmaEntrega!: string;
+  public firmaRecibe!: string;
+  public descripcionEntrega!: string;
+  public descripcionRecibe!: string;
   public Uid!: number;
   public estado!: string;
   public region!: string;
@@ -34,15 +37,28 @@ Maestro.init(
 
     NombreMaestro: {
       type: DataTypes.STRING,
+      allowNull: true
     },
-    firma: {
+    maestroRecibido:{
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    firmaEntrega: {
       type: DataTypes.TEXT("long"),
-      allowNull: false,
+      allowNull: true,
     },
-    descripcion: {
+    firmaRecibe: {
       type: DataTypes.TEXT("long"),
+      allowNull: true,
     },
-
+    descripcionEntrega: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true
+    },
+    descripcionRecibe: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true
+    },
     Uid: {
       type: DataTypes.INTEGER
     },

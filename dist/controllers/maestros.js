@@ -16,31 +16,20 @@ const maestros_1 = require("../models/maestros");
 const movimientoMaestro_1 = require("../models/movimientoMaestro");
 const user_1 = require("../models/user");
 const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, estado, region, marca, modelo, Uid, } = req.body;
+    const { nombre, NombreMaestro, firmaEntrega, descripcionEntrega, estado, region, marca, modelo, imei, fecha, Uid, } = req.body;
     try {
-        const maestroExistente = yield maestros_1.Maestro.findOne({
-            where: {
-                [sequelize_1.Op.or]: [{ correo }, { cedula }],
-            },
-        });
-        if (maestroExistente) {
-            return res.status(400).json({
-                msg: "El maestro ya está registrado con el correo o cédula proporcionados",
-            });
-        }
         // Crear el nuevo maestro
         const maestro = yield maestros_1.Maestro.create({
             nombre,
-            apellido,
             NombreMaestro,
-            correo,
-            cedula,
-            firma,
-            descripcion,
+            firmaEntrega,
+            descripcionEntrega,
             estado,
             region,
             marca,
             modelo,
+            imei,
+            fecha,
             Uid,
         });
         yield movimientoMaestro_1.MovimientoMaestro.create({
@@ -93,6 +82,7 @@ const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.ObtenerMaestrPorId = ObtenerMaestrPorId;
 const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
+    const { firmaRecibe, descripcionRecibe, maestroRecibido } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -100,35 +90,40 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
                 message: `No existe el maestro con el id: ${Mid}`,
             });
         }
+        // Crear registro en la tabla maestroBorrado con los datos modificados
         yield maestroBorrado_1.maestroBorrado.create({
             Mid: maestro.Mid,
             nombre: maestro.nombre,
-            apellido: maestro.apellido,
             NombreMaestro: maestro.NombreMaestro,
-            correo: maestro.correo,
-            cedula: maestro.cedula,
-            firma: maestro.firma,
-            descripcion: maestro.descripcion,
+            maestroRecibido: maestroRecibido,
+            firmaEntrega: maestro.firmaEntrega,
+            firmaRecibe: firmaRecibe, // Firma proporcionada por el usuario
+            descripcionEntrega: maestro.descripcionEntrega,
+            descripcionRecibe: descripcionRecibe, // Descripcion proporcionada por el usuario
             region: maestro.region,
             marca: maestro.marca,
             modelo: maestro.modelo,
+            imei: maestro.imei,
+            fecha: maestro.fecha,
             Uid: maestro.Uid,
-            estado: "INACTIVO",
+            estado: "Entregado",
             deletedAt: new Date(),
         });
+        // Crear registro en la tabla MovimientoMaestro
         yield movimientoMaestro_1.MovimientoMaestro.create({
             Mid: maestro.Mid,
             tipoMovimiento: "ELIMINACION",
         });
+        // Eliminar el maestro de la tabla Maestro
         yield maestros_1.Maestro.destroy({ where: { Mid } });
         res.status(200).json({
-            message: `Maestro con ID ${Mid} eliminado`,
+            message: `Maestro con ID ${Mid} eliminado y datos actualizados`,
         });
     }
     catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500).json({
-            error: "Problemas al obtener el maestro",
+            error: 'Problemas al borrar el maestro',
             message: err.message || err,
         });
     }
@@ -136,7 +131,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.borrarMaestrosPorId = borrarMaestrosPorId;
 const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { nombre, apellido, NombreMaestro, correo, cedula, firma, descripcion, region, estado } = req.body;
+    const { nombre, NombreMaestro, firma, descripcion, region, estado } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -146,10 +141,7 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
         }
         yield maestros_1.Maestro.update({
             nombre,
-            apellido,
             NombreMaestro,
-            correo,
-            cedula,
             firma,
             region,
             estado,
@@ -265,36 +257,37 @@ const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const maestroInactivo = yield maestroBorrado_1.maestroBorrado.findOne({ where: { Mid } });
         if (!maestroInactivo) {
             return res.status(404).json({
-                error: 'Maestro no encontrado en la tabla de maestros inactivos',
+                error: "Maestro no encontrado en la tabla de maestros inactivos",
             });
         }
         // Mover el maestro a la tabla maestros
         const maestroActivo = yield maestros_1.Maestro.create({
             Mid: maestroInactivo.Mid,
             nombre: maestroInactivo.nombre,
-            apellido: maestroInactivo.apellido,
             NombreMaestro: maestroInactivo.NombreMaestro,
-            correo: maestroInactivo.correo,
-            cedula: maestroInactivo.cedula,
-            firma: maestroInactivo.firma,
-            descripcion: maestroInactivo.descripcion,
+            firmaEntrega: maestroInactivo.firmaEntrega,
+            firmaRecibe: maestroInactivo.firmaRecibe,
+            descripcionEntrega: maestroInactivo.descripcionEntrega,
+            descripcionRecibe: maestroInactivo.descripcionRecibe,
             Uid: maestroInactivo.Uid,
-            estado: 'activo',
+            estado: "activo",
             region: maestroInactivo.region,
             marca: maestroInactivo.marca,
-            modelo: maestroInactivo.modelo
+            modelo: maestroInactivo.modelo,
+            imei: maestroInactivo.imei,
+            fecha: maestroInactivo.fecha,
         });
         // Eliminar el maestro de la tabla maestros_borrados
         yield maestroBorrado_1.maestroBorrado.destroy({ where: { Mid } });
         res.status(200).json({
-            message: 'Maestro reactivado exitosamente',
+            message: "Maestro reactivado exitosamente",
             maestro: maestroActivo,
         });
     }
     catch (err) {
         console.error(err);
         res.status(500).json({
-            error: 'Problemas al reactivar el maestro',
+            error: "Problemas al reactivar el maestro",
             message: err.message || err,
         });
     }

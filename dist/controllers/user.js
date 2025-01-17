@@ -19,6 +19,12 @@ const maestros_1 = require("../models/maestros");
 const user_1 = require("../models/user");
 const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, apellido, correo, contrasena } = req.body;
+    const emailDomain = correo.split('@')[1];
+    if (emailDomain !== 'andrespublicidadtg.com') {
+        return res.status(400).json({
+            msg: 'Correo no valido',
+        });
+    }
     // Verificar si el usuario ya existe
     const userOne = yield user_1.User.findOne({ where: { correo: correo } });
     if (userOne) {

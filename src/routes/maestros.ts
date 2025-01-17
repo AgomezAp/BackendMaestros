@@ -17,7 +17,7 @@ const router = Router();
 
 router.post( "/api/maestros/registrar-maestro",validateToken,registrarMaestro);
 router.get("/api/maestros/obtener-maestros",validateToken,ObtenerMaestros);
-router.delete("/api/maestros/borrar-maestro/:Mid",validateToken,borrarMaestrosPorId);
+router.post("/api/maestros/borrar-maestro/:Mid",validateToken,borrarMaestrosPorId);
 router.patch("/api/maestros/actualizar-maestro/:Mid",validateToken,actualizarMaestro);
 router.post('/api/maestros/reporte',validateToken ,generarReporte);
 router.delete('/api/maestros/reactivar-maestro/:Mid',validateToken ,reactivarMaestro);

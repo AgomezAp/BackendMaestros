@@ -19,24 +19,29 @@ Maestro.init({
     nombre: {
         type: sequelize_1.DataTypes.STRING,
     },
-    apellido: {
-        type: sequelize_1.DataTypes.STRING,
-    },
     NombreMaestro: {
         type: sequelize_1.DataTypes.STRING,
+        allowNull: true
     },
-    correo: {
+    maestroRecibido: {
         type: sequelize_1.DataTypes.STRING,
+        allowNull: true
     },
-    cedula: {
-        type: sequelize_1.DataTypes.STRING,
-    },
-    firma: {
+    firmaEntrega: {
         type: sequelize_1.DataTypes.TEXT("long"),
-        allowNull: false,
+        allowNull: true,
     },
-    descripcion: {
+    firmaRecibe: {
         type: sequelize_1.DataTypes.TEXT("long"),
+        allowNull: true,
+    },
+    descripcionEntrega: {
+        type: sequelize_1.DataTypes.TEXT("long"),
+        allowNull: true
+    },
+    descripcionRecibe: {
+        type: sequelize_1.DataTypes.TEXT("long"),
+        allowNull: true
     },
     Uid: {
         type: sequelize_1.DataTypes.INTEGER
@@ -55,6 +60,14 @@ Maestro.init({
     },
     modelo: {
         type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
+    imei: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
+    fecha: {
+        type: sequelize_1.DataTypes.DATE,
         allowNull: true,
     },
 }, {

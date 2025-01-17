@@ -9,10 +9,13 @@ import { User } from './user';
 export class maestroBorrado extends Model {
   public Mid!: number;
   public NombreMaestro!: string;
+  public maestroRecibido!: string;
   public nombre!: string;
-  public firma!: string;
+  public firmaEntrega!: string;
+  public firmaRecibe!: string;
   public estado!: string;
-  public descripcion!: string;
+  public descripcionEntrega!: string;
+  public descripcionRecibe!: string;
   public Uid!: number;
   public region!: string;
   public marca!: string;
@@ -44,16 +47,25 @@ maestroBorrado.init(
 
       allowNull: false, 
     },
-
-    firma: {
-      type: DataTypes.TEXT("long"),
-      allowNull: false,
+    maestroRecibido:{
+      type: DataTypes.STRING,
+      allowNull: true
     },
-
-    descripcion: {
+    firmaEntrega: {
       type: DataTypes.TEXT("long"),
-
-      allowNull: false,
+      allowNull: true,
+    },
+    firmaRecibe: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true,
+    },
+    descripcionEntrega: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true
+    },
+    descripcionRecibe: {
+      type: DataTypes.TEXT("long"),
+      allowNull: true
     },
     Uid: {
       type: DataTypes.INTEGER,
