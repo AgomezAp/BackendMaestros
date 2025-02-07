@@ -100,7 +100,7 @@ export const borrarMaestrosPorId = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { firmaRecibe, descripcionRecibe,maestroRecibido,fechaEntrega } = req.body;
+  const { firmaRecibe, descripcionRecibe,maestroRecibido,fechaEntrega, nombreCompletoRecibe } = req.body;
 
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -128,6 +128,7 @@ export const borrarMaestrosPorId = async (
       fechaRecibe: maestro.fechaRecibe,
       fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
       Uid: maestro.Uid,
+      nombreCompletoRecibe: nombreCompletoRecibe, // Nombre completo proporcionado por el
       estado: "Entregado",
       deletedAt: new Date(),
     });

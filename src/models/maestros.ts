@@ -23,7 +23,7 @@ export class Maestro extends Model {
   public imei!: string;
   public fechaRecibe !: Date;
   public fechaEntrega !: Date;
-
+  
 }
 
 Maestro.init(

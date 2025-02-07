@@ -82,7 +82,7 @@ const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.ObtenerMaestrPorId = ObtenerMaestrPorId;
 const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { firmaRecibe, descripcionRecibe, maestroRecibido, fechaEntrega } = req.body;
+    const { firmaRecibe, descripcionRecibe, maestroRecibido, fechaEntrega, nombreCompletoRecibe } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -107,6 +107,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
             fechaRecibe: maestro.fechaRecibe,
             fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
             Uid: maestro.Uid,
+            nombreCompletoRecibe: nombreCompletoRecibe, // Nombre completo proporcionado por el
             estado: "Entregado",
             deletedAt: new Date(),
         });

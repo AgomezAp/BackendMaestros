@@ -75,6 +75,8 @@ export const login = async (req: Request, res: Response): Promise<any> => {
   res.json({
     msg: "Usuario logeado con éxito",
     Uid : user.Uid,
+    nombre: user.nombre,
+    apellido: user.apellido,
     token,
   });
 };

@@ -47,6 +47,10 @@ maestroBorrado.init({
     Uid: {
         type: sequelize_1.DataTypes.INTEGER,
     },
+    nombreCompletoRecibe: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
     estado: {
         type: sequelize_1.DataTypes.STRING,
         defaultValue: 'activo',

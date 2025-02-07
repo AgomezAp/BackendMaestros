@@ -79,6 +79,8 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.json({
         msg: "Usuario logeado con éxito",
         Uid: user.Uid,
+        nombre: user.nombre,
+        apellido: user.apellido,
         token,
     });
 });

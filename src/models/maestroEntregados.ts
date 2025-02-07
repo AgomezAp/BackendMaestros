@@ -16,6 +16,7 @@ export class MaestroEntregado extends Model {
   public descripcionEntrega!: string;
   public descripcionRecibe!: string;
   public Uid!: number;
+  public nombreRecibe!: string;
   public estado!: string;
   public region!: string;
   public marca!: string;

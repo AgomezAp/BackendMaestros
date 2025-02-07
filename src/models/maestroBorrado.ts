@@ -17,6 +17,7 @@ export class maestroBorrado extends Model {
   public descripcionEntrega!: string;
   public descripcionRecibe!: string;
   public Uid!: number;
+  public NombreRecibe!: string; 
   public region!: string;
   public marca!: string;
   public modelo!: string;
@@ -70,6 +71,10 @@ maestroBorrado.init(
     },
     Uid: {
       type: DataTypes.INTEGER,
+    },
+    nombreCompletoRecibe: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     estado: {
       type: DataTypes.STRING,
