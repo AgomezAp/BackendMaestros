@@ -86,9 +86,9 @@ class Server {
                 /* {force: true}{alter: true} */
                 yield connection_1.default.authenticate();
                 yield user_2.User.sync();
-                yield maestros_2.Maestro.sync({ alter: true });
-                yield movimientoMaestro_1.MovimientoMaestro.sync({ alter: true });
-                yield maestroBorrado_1.maestroBorrado.sync({ alter: true });
+                yield maestros_2.Maestro.sync();
+                yield movimientoMaestro_1.MovimientoMaestro.sync();
+                yield maestroBorrado_1.maestroBorrado.sync();
                 console.log("Conexión a la base de datos exitosa");
             }
             catch (error) {

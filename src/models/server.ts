@@ -83,9 +83,9 @@ class Server {
       /* {force: true}{alter: true} */
       await sequelize.authenticate();
       await User.sync();
-      await Maestro.sync({alter: true});
-      await MovimientoMaestro.sync({alter: true});
-      await maestroBorrado.sync({alter: true});
+      await Maestro.sync();
+      await MovimientoMaestro.sync();
+      await maestroBorrado.sync();
       console.log("Conexión a la base de datos exitosa");
     } catch (error) {
       console.log("Error al conectar a la base de datos", error);
