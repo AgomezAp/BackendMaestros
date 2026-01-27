@@ -113,7 +113,7 @@ class Server {
       await maestroBorrado.sync();
       // Nuevos modelos de inventario
       await Dispositivo.sync();
-      await ActaEntrega.sync();
+      await ActaEntrega.sync(); 
       await DetalleActa.sync();
       await MovimientoDispositivo.sync();
       console.log("Conexión a la base de datos exitosa");
