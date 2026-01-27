@@ -54,7 +54,7 @@ exports.obtenerAnalistasActivos = obtenerAnalistasActivos;
 const obtenerAnalistaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Aid);
+        const analista = yield analista_1.Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
@@ -113,7 +113,7 @@ const actualizarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, funct
     const { Aid } = req.params;
     const { nombre, apellido, cedula, telefono, correo, cargo, activo } = req.body;
     try {
-        const analista = yield analista_1.Analista.findByPk(Aid);
+        const analista = yield analista_1.Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
@@ -145,7 +145,7 @@ exports.actualizarAnalista = actualizarAnalista;
 const desactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Aid);
+        const analista = yield analista_1.Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
@@ -169,7 +169,7 @@ exports.desactivarAnalista = desactivarAnalista;
 const reactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Aid);
+        const analista = yield analista_1.Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
@@ -193,7 +193,7 @@ exports.reactivarAnalista = reactivarAnalista;
 const eliminarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Aid);
+        const analista = yield analista_1.Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,

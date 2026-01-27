@@ -55,7 +55,7 @@ export const obtenerAnalistaPorId = async (
 ): Promise<any> => {
   const { Aid } = req.params;
   try {
-    const analista = await Analista.findByPk(Aid);
+    const analista = await Analista.findByPk(Number(Aid));
     if (!analista) {
       return res.status(404).json({
         message: `No existe el analista con el id: ${Aid}`,
@@ -123,7 +123,7 @@ export const actualizarAnalista = async (
   const { nombre, apellido, cedula, telefono, correo, cargo, activo } = req.body;
   
   try {
-    const analista = await Analista.findByPk(Aid);
+    const analista = await Analista.findByPk(Number(Aid));
     if (!analista) {
       return res.status(404).json({
         message: `No existe el analista con el id: ${Aid}`,
@@ -163,7 +163,7 @@ export const desactivarAnalista = async (
   const { Aid } = req.params;
   
   try {
-    const analista = await Analista.findByPk(Aid);
+    const analista = await Analista.findByPk(Number(Aid));
     if (!analista) {
       return res.status(404).json({
         message: `No existe el analista con el id: ${Aid}`,
@@ -195,7 +195,7 @@ export const reactivarAnalista = async (
   const { Aid } = req.params;
   
   try {
-    const analista = await Analista.findByPk(Aid);
+    const analista = await Analista.findByPk(Number(Aid));
     if (!analista) {
       return res.status(404).json({
         message: `No existe el analista con el id: ${Aid}`,
@@ -227,7 +227,7 @@ export const eliminarAnalista = async (
   const { Aid } = req.params;
   
   try {
-    const analista = await Analista.findByPk(Aid);
+    const analista = await Analista.findByPk(Number(Aid));
     if (!analista) {
       return res.status(404).json({
         message: `No existe el analista con el id: ${Aid}`,

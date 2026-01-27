@@ -71,7 +71,7 @@ export const obtenerDispositivoPorId = async (req: Request, res: Response): Prom
   try {
     const { id } = req.params;
     
-    const dispositivo = await Dispositivo.findByPk(id, {
+    const dispositivo = await Dispositivo.findByPk(Number(id), {
       include: [
         {
           model: MovimientoDispositivo,
@@ -191,7 +191,7 @@ export const actualizarDispositivo = async (req: Request, res: Response): Promis
       Uid
     } = req.body;
     
-    const dispositivo = await Dispositivo.findByPk(id);
+    const dispositivo = await Dispositivo.findByPk(Number(id));
     
     if (!dispositivo) {
       res.status(404).json({ msg: 'Dispositivo no encontrado' });
@@ -240,7 +240,7 @@ export const cambiarEstadoDispositivo = async (req: Request, res: Response): Pro
     const { id } = req.params;
     const { nuevoEstado, motivo, Uid } = req.body;
     
-    const dispositivo = await Dispositivo.findByPk(id);
+    const dispositivo = await Dispositivo.findByPk(Number(id));
     
     if (!dispositivo) {
       res.status(404).json({ msg: 'Dispositivo no encontrado' });
@@ -340,7 +340,7 @@ export const darDeBajaDispositivo = async (req: Request, res: Response): Promise
     const { id } = req.params;
     const { motivo, nuevoEstado, Uid } = req.body; // nuevoEstado: dañado, perdido, obsoleto
     
-    const dispositivo = await Dispositivo.findByPk(id);
+    const dispositivo = await Dispositivo.findByPk(Number(id));
     
     if (!dispositivo) {
       res.status(404).json({ msg: 'Dispositivo no encontrado' });

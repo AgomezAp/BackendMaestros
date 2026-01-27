@@ -74,7 +74,7 @@ exports.obtenerDisponibles = obtenerDisponibles;
 const obtenerDispositivoPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(id, {
+        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id), {
             include: [
                 {
                     model: movimientoDispositivo_1.MovimientoDispositivo,
@@ -160,7 +160,7 @@ const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fu
     try {
         const { id } = req.params;
         const { nombre, categoria, marca, modelo, serial, imei, color, descripcion, condicion, ubicacion, observaciones, Uid } = req.body;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(id);
+        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;
@@ -205,7 +205,7 @@ const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         const { id } = req.params;
         const { nuevoEstado, motivo, Uid } = req.body;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(id);
+        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;
@@ -297,7 +297,7 @@ const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
     try {
         const { id } = req.params;
         const { motivo, nuevoEstado, Uid } = req.body; // nuevoEstado: dañado, perdido, obsoleto
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(id);
+        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;

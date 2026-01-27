@@ -63,7 +63,7 @@ exports.ObtenerMaestros = ObtenerMaestros;
 const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Mid);
+        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,
@@ -87,7 +87,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
     const { Mid } = req.params;
     const { firmaRecibe, descripcionRecibe, maestroRecibido, fechaEntrega, nombreCompletoRecibe } = req.body;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Mid);
+        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,
@@ -138,7 +138,7 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
     const { Mid } = req.params;
     const { nombre, analistaAsignado, Aid, firma, descripcion, almacen, estado, marca, modelo, stockMinimo } = req.body;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Mid);
+        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,

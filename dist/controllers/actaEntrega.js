@@ -93,7 +93,7 @@ exports.obtenerActas = obtenerActas;
 const obtenerActaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const acta = yield actaEntrega_1.ActaEntrega.findByPk(id, {
+        const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
             include: [
                 {
                     model: detalleActa_1.DetalleActa,
@@ -240,7 +240,7 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         const { id } = req.params; // ID del acta
         const { devoluciones, // Array de { detalleId, estadoDevolucion, condicionDevolucion, observaciones }
         observacionesDevolucion, Uid } = req.body;
-        const acta = yield actaEntrega_1.ActaEntrega.findByPk(id, {
+        const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
             include: [{ model: detalleActa_1.DetalleActa, as: 'detalles' }],
             transaction
         });
@@ -320,7 +320,7 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         }, { transaction });
         yield transaction.commit();
         // Obtener acta actualizada
-        const actaActualizada = yield actaEntrega_1.ActaEntrega.findByPk(id, {
+        const actaActualizada = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
             include: [
                 {
                     model: detalleActa_1.DetalleActa,

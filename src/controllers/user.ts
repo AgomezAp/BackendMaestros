@@ -112,7 +112,7 @@ export const eliminarUsuarioId = async (
   const { Uid } = req.params;
 
   try {
-    const user = await User.findByPk(Uid);
+    const user = await User.findByPk(Number(Uid));
 
     if (!user) {
       return res.status(404).json({ msg: "Usuario no encontrado" });
@@ -128,7 +128,7 @@ export const obtenerMaestrosPorIdUsuario = async (req: Request, res: Response): 
   const { Uid } = req.params;
 
   try {
-    const user = await User.findByPk(Uid, {
+    const user = await User.findByPk(Number(Uid), {
       include: [{ model: Maestro, as: 'maestros' }]
     });
 

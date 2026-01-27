@@ -82,7 +82,7 @@ export const ObtenerMaestrPorId = async (
 ): Promise<any> => {
   const { Mid } = req.params;
   try {
-    const maestro = await Maestro.findByPk(Mid);
+    const maestro = await Maestro.findByPk(Number(Mid));
     if (!maestro) {
       return res.status(404).json({
         message: `No existe el maestro con el id: ${Mid}`,
@@ -110,7 +110,7 @@ export const borrarMaestrosPorId = async (
   const { firmaRecibe, descripcionRecibe,maestroRecibido,fechaEntrega, nombreCompletoRecibe } = req.body;
 
   try {
-    const maestro = await Maestro.findByPk(Mid);
+    const maestro = await Maestro.findByPk(Number(Mid));
 
     if (!maestro) {
       return res.status(404).json({
@@ -169,7 +169,7 @@ export const actualizarMaestro = async (
   const { nombre, analistaAsignado, Aid, firma, descripcion, almacen, estado, marca, modelo, stockMinimo } =
     req.body;
   try {
-    const maestro = await Maestro.findByPk(Mid);
+    const maestro = await Maestro.findByPk(Number(Mid));
     if (!maestro) {
       return res.status(404).json({
         message: `No existe el maestro con el id: ${Mid}`,

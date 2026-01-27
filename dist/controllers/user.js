@@ -111,7 +111,7 @@ exports.restablecerContrasena = restablecerContrasena;
 const eliminarUsuarioId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Uid } = req.params;
     try {
-        const user = yield user_1.User.findByPk(Uid);
+        const user = yield user_1.User.findByPk(Number(Uid));
         if (!user) {
             return res.status(404).json({ msg: "Usuario no encontrado" });
         }
@@ -126,7 +126,7 @@ exports.eliminarUsuarioId = eliminarUsuarioId;
 const obtenerMaestrosPorIdUsuario = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Uid } = req.params;
     try {
-        const user = yield user_1.User.findByPk(Uid, {
+        const user = yield user_1.User.findByPk(Number(Uid), {
             include: [{ model: maestros_1.Maestro, as: 'maestros' }]
         });
         if (!user) {

@@ -89,7 +89,7 @@ export const obtenerActaPorId = async (req: Request, res: Response): Promise<voi
   try {
     const { id } = req.params;
     
-    const acta = await ActaEntrega.findByPk(id, {
+    const acta = await ActaEntrega.findByPk(Number(id), {
       include: [
         {
           model: DetalleActa,
@@ -268,7 +268,7 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       Uid
     } = req.body;
     
-    const acta = await ActaEntrega.findByPk(id, {
+    const acta = await ActaEntrega.findByPk(Number(id), {
       include: [{ model: DetalleActa, as: 'detalles' }],
       transaction
     });
@@ -363,7 +363,7 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
     await transaction.commit();
     
     // Obtener acta actualizada
-    const actaActualizada = await ActaEntrega.findByPk(id, {
+    const actaActualizada = await ActaEntrega.findByPk(Number(id), {
       include: [
         {
           model: DetalleActa,
