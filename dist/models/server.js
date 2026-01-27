@@ -16,13 +16,22 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
+const path_1 = __importDefault(require("path"));
 const connection_1 = __importDefault(require("../database/connection"));
 const maestros_1 = __importDefault(require("../routes/maestros"));
 const user_1 = __importDefault(require("../routes/user"));
+const analista_1 = __importDefault(require("../routes/analista"));
+const dispositivo_1 = __importDefault(require("../routes/dispositivo"));
+const actaEntrega_1 = __importDefault(require("../routes/actaEntrega"));
 const maestroBorrado_1 = require("./maestroBorrado");
 const maestros_2 = require("./maestros");
 const movimientoMaestro_1 = require("./movimientoMaestro");
 const user_2 = require("./user");
+const analista_2 = require("./analista");
+const dispositivo_2 = require("./dispositivo");
+const actaEntrega_2 = require("./actaEntrega");
+const detalleActa_1 = require("./detalleActa");
+const movimientoDispositivo_1 = require("./movimientoDispositivo");
 dotenv_1.default.config();
 class Server {
     constructor() {
@@ -40,12 +49,18 @@ class Server {
     }
     middlewares() {
         this.app.use(express_1.default.json());
-        this.app.use((0, helmet_1.default)());
+        // Configurar helmet para permitir imágenes
+        this.app.use((0, helmet_1.default)({
+            crossOriginResourcePolicy: { policy: "cross-origin" },
+            crossOriginEmbedderPolicy: false,
+        }));
         this.app.use((0, cors_1.default)({
             origin: "*", // Permite todas las solicitudes de origen cruzado
             methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Métodos permitidos
             allowedHeaders: ["Content-Type", "Authorization"],
         }));
+        // Servir archivos estáticos de uploads
+        this.app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../../uploads')));
         this.app.use((req, res, next) => {
             res.setTimeout(60000, () => {
                 // 2 minutos
@@ -78,6 +93,9 @@ class Server {
     routes() {
         this.app.use(user_1.default);
         this.app.use(maestros_1.default);
+        this.app.use(analista_1.default);
+        this.app.use('/api/dispositivos', dispositivo_1.default);
+        this.app.use('/api/actas', actaEntrega_1.default);
     }
     DbConnection() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -85,14 +103,64 @@ class Server {
             try {
                 /* {force: true}{alter: true} */
                 yield connection_1.default.authenticate();
+                // Migración: Cambiar 'prestado' a 'entregado' en el ENUM de estado
+                yield this.migrateEstadoEnum();
                 yield user_2.User.sync();
+                yield analista_2.Analista.sync();
                 yield maestros_2.Maestro.sync();
                 yield movimientoMaestro_1.MovimientoMaestro.sync();
                 yield maestroBorrado_1.maestroBorrado.sync();
+                // Nuevos modelos de inventario
+                yield dispositivo_2.Dispositivo.sync();
+                yield actaEntrega_2.ActaEntrega.sync();
+                yield detalleActa_1.DetalleActa.sync();
+                yield movimientoDispositivo_1.MovimientoDispositivo.sync();
                 console.log("Conexión a la base de datos exitosa");
             }
             catch (error) {
                 console.log("Error al conectar a la base de datos", error);
+            }
+        });
+    }
+    /**
+     * Migración para cambiar el ENUM de estado de 'prestado' a 'entregado'
+     */
+    migrateEstadoEnum() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                // Verificar si existe el valor 'prestado' y no existe 'entregado'
+                const [results] = yield connection_1.default.query(`
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_dispositivos_estado')
+      `);
+                const labels = results.map(r => r.enumlabel);
+                if (labels.includes('prestado') && !labels.includes('entregado')) {
+                    console.log('Migrando estado: prestado -> entregado...');
+                    // Actualizar los registros que tienen 'prestado'
+                    yield connection_1.default.query(`
+          UPDATE dispositivos SET estado = 'disponible' WHERE estado = 'prestado';
+        `);
+                    // Renombrar el valor del ENUM
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_dispositivos_estado" RENAME VALUE 'prestado' TO 'entregado';
+        `);
+                    console.log('Migración de estado completada');
+                }
+                else if (!labels.includes('entregado') && !labels.includes('prestado')) {
+                    // El ENUM puede no existir aún
+                    console.log('El ENUM de estado se creará con sync()');
+                }
+                else {
+                    console.log('Migración de estado ya aplicada o no necesaria');
+                }
+            }
+            catch (error) {
+                // Si falla, probablemente el ENUM no existe aún (primera vez)
+                if (!((_a = error.message) === null || _a === void 0 ? void 0 : _a.includes('does not exist'))) {
+                    console.log('Error en migración de ENUM (puede ser primera ejecución):', error.message);
+                }
             }
         });
     }

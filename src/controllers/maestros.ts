@@ -8,6 +8,7 @@ import { maestroBorrado } from '../models/maestroBorrado';
 import { Maestro } from '../models/maestros';
 import { MovimientoMaestro } from '../models/movimientoMaestro';
 import { User } from '../models/user';
+import { Analista } from '../models/analista';
 
 export const registrarMaestro = async (
   req: Request,
@@ -15,30 +16,36 @@ export const registrarMaestro = async (
 ): Promise<any> => {
   const {
     nombre,
-    NombreMaestro,
+    analistaAsignado,
+    Aid,
     firmaEntrega,
     descripcionEntrega,
+    fotosEntrega,
     estado,
-    region,
+    almacen,
     marca,
     modelo,
     imei,
-    fechaRecibe,
+    stockMinimo,
+    fechaIngreso,
     Uid,
   } = req.body;
   try {
-    // Crear el nuevo maestro
+    // Crear el nuevo celular en inventario
     const maestro = await Maestro.create({
       nombre,
-      NombreMaestro,
+      analistaAsignado,
+      Aid,
       firmaEntrega,
       descripcionEntrega,
-      estado,
-      region,
+      fotosEntrega,
+      estado: estado || 'disponible',
+      almacen: almacen || 'Principal',
       marca,
       modelo,
       imei,
-      fechaRecibe,
+      stockMinimo: stockMinimo || 5,
+      fechaIngreso: fechaIngreso || new Date(),
       Uid,
     });
 
@@ -115,17 +122,17 @@ export const borrarMaestrosPorId = async (
     await maestroBorrado.create({
       Mid: maestro.Mid,
       nombre: maestro.nombre,
-      NombreMaestro: maestro.NombreMaestro,
+      NombreMaestro: maestro.analistaAsignado,
       maestroRecibido: maestroRecibido,
       firmaEntrega: maestro.firmaEntrega,
       firmaRecibe: firmaRecibe, // Firma proporcionada por el usuario
       descripcionEntrega: maestro.descripcionEntrega,
       descripcionRecibe: descripcionRecibe, // Descripcion proporcionada por el usuario
-      region: maestro.region,
+      region: maestro.almacen, // Ahora se usa almacen en lugar de region
       marca: maestro.marca,
       modelo: maestro.modelo,
       imei: maestro.imei,
-      fechaRecibe: maestro.fechaRecibe,
+      fechaRecibe: maestro.fechaIngreso,
       fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
       Uid: maestro.Uid,
       nombreCompletoRecibe: nombreCompletoRecibe, // Nombre completo proporcionado por el
@@ -159,7 +166,7 @@ export const actualizarMaestro = async (
   res: Response
 ): Promise<any> => {
   const { Mid } = req.params;
-  const { nombre, NombreMaestro, firma, descripcion, region, estado } =
+  const { nombre, analistaAsignado, Aid, firma, descripcion, almacen, estado, marca, modelo, stockMinimo } =
     req.body;
   try {
     const maestro = await Maestro.findByPk(Mid);
@@ -172,11 +179,15 @@ export const actualizarMaestro = async (
     await Maestro.update(
       {
         nombre,
-        NombreMaestro,
+        analistaAsignado,
+        Aid,
         firma,
-        region,
+        almacen,
         estado,
         descripcion,
+        marca,
+        modelo,
+        stockMinimo,
       },
       { where: { Mid } }
     );
@@ -316,19 +327,19 @@ export const reactivarMaestro = async (
     const maestroActivo = await Maestro.create({
       Mid: maestroInactivo.Mid,
       nombre: maestroInactivo.nombre,
-      NombreMaestro: maestroInactivo.NombreMaestro,
+      analistaAsignado: maestroInactivo.NombreMaestro,
       firmaEntrega: maestroInactivo.firmaEntrega,
       firmaRecibe: maestroInactivo.firmaRecibe,
       descripcionEntrega: maestroInactivo.descripcionEntrega,
       descripcionRecibe: maestroInactivo.descripcionRecibe,
       Uid: maestroInactivo.Uid,
-      estado: "activo",
-      region: maestroInactivo.region,
+      estado: "disponible",
+      almacen: maestroInactivo.region || 'Principal',
       marca: maestroInactivo.marca,
       modelo: maestroInactivo.modelo,
       imei: maestroInactivo.imei,
-      fechaRecibe: maestroInactivo.fechaRecibe,
-      fechaEntrega: maestroInactivo.fechaEntrega,
+      fechaIngreso: maestroInactivo.fechaRecibe,
+      fechaSalida: maestroInactivo.fechaEntrega,
     });
 
     // Eliminar el maestro de la tabla maestros_borrados

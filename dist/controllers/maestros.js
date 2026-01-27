@@ -16,20 +16,23 @@ const maestros_1 = require("../models/maestros");
 const movimientoMaestro_1 = require("../models/movimientoMaestro");
 const user_1 = require("../models/user");
 const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { nombre, NombreMaestro, firmaEntrega, descripcionEntrega, estado, region, marca, modelo, imei, fechaRecibe, Uid, } = req.body;
+    const { nombre, analistaAsignado, Aid, firmaEntrega, descripcionEntrega, fotosEntrega, estado, almacen, marca, modelo, imei, stockMinimo, fechaIngreso, Uid, } = req.body;
     try {
-        // Crear el nuevo maestro
+        // Crear el nuevo celular en inventario
         const maestro = yield maestros_1.Maestro.create({
             nombre,
-            NombreMaestro,
+            analistaAsignado,
+            Aid,
             firmaEntrega,
             descripcionEntrega,
-            estado,
-            region,
+            fotosEntrega,
+            estado: estado || 'disponible',
+            almacen: almacen || 'Principal',
             marca,
             modelo,
             imei,
-            fechaRecibe,
+            stockMinimo: stockMinimo || 5,
+            fechaIngreso: fechaIngreso || new Date(),
             Uid,
         });
         yield movimientoMaestro_1.MovimientoMaestro.create({
@@ -94,17 +97,17 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
         yield maestroBorrado_1.maestroBorrado.create({
             Mid: maestro.Mid,
             nombre: maestro.nombre,
-            NombreMaestro: maestro.NombreMaestro,
+            NombreMaestro: maestro.analistaAsignado,
             maestroRecibido: maestroRecibido,
             firmaEntrega: maestro.firmaEntrega,
             firmaRecibe: firmaRecibe, // Firma proporcionada por el usuario
             descripcionEntrega: maestro.descripcionEntrega,
             descripcionRecibe: descripcionRecibe, // Descripcion proporcionada por el usuario
-            region: maestro.region,
+            region: maestro.almacen, // Ahora se usa almacen en lugar de region
             marca: maestro.marca,
             modelo: maestro.modelo,
             imei: maestro.imei,
-            fechaRecibe: maestro.fechaRecibe,
+            fechaRecibe: maestro.fechaIngreso,
             fechaEntrega: fechaEntrega, // Fecha proporcionada por el usuario
             Uid: maestro.Uid,
             nombreCompletoRecibe: nombreCompletoRecibe, // Nombre completo proporcionado por el
@@ -133,7 +136,7 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.borrarMaestrosPorId = borrarMaestrosPorId;
 const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
-    const { nombre, NombreMaestro, firma, descripcion, region, estado } = req.body;
+    const { nombre, analistaAsignado, Aid, firma, descripcion, almacen, estado, marca, modelo, stockMinimo } = req.body;
     try {
         const maestro = yield maestros_1.Maestro.findByPk(Mid);
         if (!maestro) {
@@ -143,11 +146,15 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
         }
         yield maestros_1.Maestro.update({
             nombre,
-            NombreMaestro,
+            analistaAsignado,
+            Aid,
             firma,
-            region,
+            almacen,
             estado,
             descripcion,
+            marca,
+            modelo,
+            stockMinimo,
         }, { where: { Mid } });
         res.status(200).json({
             message: `Maestro con ID ${Mid} actualizado`,
@@ -266,19 +273,19 @@ const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         const maestroActivo = yield maestros_1.Maestro.create({
             Mid: maestroInactivo.Mid,
             nombre: maestroInactivo.nombre,
-            NombreMaestro: maestroInactivo.NombreMaestro,
+            analistaAsignado: maestroInactivo.NombreMaestro,
             firmaEntrega: maestroInactivo.firmaEntrega,
             firmaRecibe: maestroInactivo.firmaRecibe,
             descripcionEntrega: maestroInactivo.descripcionEntrega,
             descripcionRecibe: maestroInactivo.descripcionRecibe,
             Uid: maestroInactivo.Uid,
-            estado: "activo",
-            region: maestroInactivo.region,
+            estado: "disponible",
+            almacen: maestroInactivo.region || 'Principal',
             marca: maestroInactivo.marca,
             modelo: maestroInactivo.modelo,
             imei: maestroInactivo.imei,
-            fechaRecibe: maestroInactivo.fechaRecibe,
-            fechaEntrega: maestroInactivo.fechaEntrega,
+            fechaIngreso: maestroInactivo.fechaRecibe,
+            fechaSalida: maestroInactivo.fechaEntrega,
         });
         // Eliminar el maestro de la tabla maestros_borrados
         yield maestroBorrado_1.maestroBorrado.destroy({ where: { Mid } });
