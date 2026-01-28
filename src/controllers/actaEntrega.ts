@@ -6,6 +6,7 @@ import { DetalleActa } from '../models/detalleActa';
 import { Dispositivo } from '../models/dispositivo';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo';
 import { getPhotoUrl } from '../config/multer';
+import { getIO } from '../models/server';
 
 /**
  * Generar número de acta único
@@ -254,6 +255,11 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
         }
       ]
     });
+    
+    // Emitir evento de WebSocket para actualización en tiempo real
+    const io = getIO();
+    io.to('actas').emit('acta:created', actaCompleta);
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
     
     res.status(201).json({
       msg: 'Acta de entrega creada exitosamente',

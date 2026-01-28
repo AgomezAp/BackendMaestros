@@ -20,6 +20,7 @@ const detalleActa_1 = require("../models/detalleActa");
 const dispositivo_1 = require("../models/dispositivo");
 const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
 const multer_1 = require("../config/multer");
+const server_1 = require("../models/server");
 /**
  * Generar número de acta único
  */
@@ -231,6 +232,10 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 }
             ]
         });
+        // Emitir evento de WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        io.to('actas').emit('acta:created', actaCompleta);
+        io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         res.status(201).json({
             msg: 'Acta de entrega creada exitosamente',
             acta: actaCompleta

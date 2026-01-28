@@ -23,6 +23,7 @@ const dispositivo_1 = require("../models/dispositivo");
 const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
 const email_1 = require("../config/email");
 const multer_1 = require("../config/multer");
+const server_1 = require("../models/server");
 /**
  * Generar número de acta de devolución único
  */
@@ -259,6 +260,10 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 }
             ]
         });
+        // Emitir evento WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        io.to('devoluciones').emit('devolucion:created', actaCompleta);
+        io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         res.status(201).json({
             msg: 'Acta de devolución creada exitosamente',
             acta: actaCompleta
@@ -535,6 +540,11 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
         }
         yield transaction.commit();
         console.log('   ✅ Acta de devolución firmada exitosamente');
+        // Emitir evento WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        const dispositivosIds = acta.detalles.map((d) => d.dispositivoId);
+        io.to('devoluciones').emit('devolucion:signed', { actaId: acta.id, estado: 'completada' });
+        io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         // Enviar confirmación por correo (async, no bloqueante)
         const dispositivos = ((_a = acta.detalles) === null || _a === void 0 ? void 0 : _a.map((d) => {
             var _a, _b, _c, _d;
@@ -620,6 +630,11 @@ const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, v
             }, { transaction });
         }
         yield transaction.commit();
+        // Emitir evento WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        const dispositivosIds = (acta.detalles || []).map((d) => d.dispositivoId);
+        io.to('devoluciones').emit('devolucion:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
+        io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         res.json({
             msg: 'Acta de devolución rechazada',
             numeroActa: acta.numeroActa

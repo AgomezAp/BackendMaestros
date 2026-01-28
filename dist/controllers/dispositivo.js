@@ -14,6 +14,7 @@ const sequelize_1 = require("sequelize");
 const dispositivo_1 = require("../models/dispositivo");
 const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
 const multer_1 = require("../config/multer");
+const server_1 = require("../models/server");
 /**
  * Obtener todos los dispositivos con filtros
  */
@@ -142,6 +143,14 @@ const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
             fecha: new Date(),
             Uid
         });
+        // Emitir evento WebSocket
+        try {
+            const io = (0, server_1.getIO)();
+            io.to('inventario').emit('dispositivo:created', { dispositivo });
+        }
+        catch (e) {
+            console.log('WebSocket no disponible');
+        }
         res.status(201).json({
             msg: 'Dispositivo registrado exitosamente',
             dispositivo
@@ -187,6 +196,14 @@ const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fu
             fecha: new Date(),
             Uid
         });
+        // Emitir evento WebSocket
+        try {
+            const io = (0, server_1.getIO)();
+            io.to('inventario').emit('dispositivo:updated', { dispositivo });
+        }
+        catch (e) {
+            console.log('WebSocket no disponible');
+        }
         res.json({
             msg: 'Dispositivo actualizado exitosamente',
             dispositivo
@@ -222,6 +239,14 @@ const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0,
             fecha: new Date(),
             Uid
         });
+        // Emitir evento WebSocket
+        try {
+            const io = (0, server_1.getIO)();
+            io.to('inventario').emit('dispositivo:updated', { dispositivo, estadoAnterior, nuevoEstado });
+        }
+        catch (e) {
+            console.log('WebSocket no disponible');
+        }
         res.json({
             msg: 'Estado actualizado exitosamente',
             dispositivo

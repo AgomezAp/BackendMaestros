@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import { Dispositivo } from '../models/dispositivo';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo';
 import { getPhotoUrl, deletePhoto } from '../config/multer';
+import { getIO } from '../models/server';
 
 /**
  * Obtener todos los dispositivos con filtros
@@ -160,6 +161,14 @@ export const registrarDispositivo = async (req: Request, res: Response): Promise
       Uid
     });
     
+    // Emitir evento WebSocket
+    try {
+      const io = getIO();
+      io.to('inventario').emit('dispositivo:created', { dispositivo });
+    } catch (e) {
+      console.log('WebSocket no disponible');
+    }
+    
     res.status(201).json({
       msg: 'Dispositivo registrado exitosamente',
       dispositivo
@@ -222,6 +231,14 @@ export const actualizarDispositivo = async (req: Request, res: Response): Promis
       Uid
     });
     
+    // Emitir evento WebSocket
+    try {
+      const io = getIO();
+      io.to('inventario').emit('dispositivo:updated', { dispositivo });
+    } catch (e) {
+      console.log('WebSocket no disponible');
+    }
+    
     res.json({
       msg: 'Dispositivo actualizado exitosamente',
       dispositivo
@@ -261,6 +278,14 @@ export const cambiarEstadoDispositivo = async (req: Request, res: Response): Pro
       fecha: new Date(),
       Uid
     });
+    
+    // Emitir evento WebSocket
+    try {
+      const io = getIO();
+      io.to('inventario').emit('dispositivo:updated', { dispositivo, estadoAnterior, nuevoEstado });
+    } catch (e) {
+      console.log('WebSocket no disponible');
+    }
     
     res.json({
       msg: 'Estado actualizado exitosamente',

@@ -9,6 +9,7 @@ import { Dispositivo } from '../models/dispositivo';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo';
 import { enviarCorreoDevolucion, enviarConfirmacionDevolucion } from '../config/email';
 import { getPhotoUrl } from '../config/multer';
+import { getIO } from '../models/server';
 
 /**
  * Generar número de acta de devolución único
@@ -285,6 +286,11 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
         }
       ]
     });
+    
+    // Emitir evento WebSocket para actualización en tiempo real
+    const io = getIO();
+    io.to('devoluciones').emit('devolucion:created', actaCompleta);
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
     
     res.status(201).json({
       msg: 'Acta de devolución creada exitosamente',
@@ -599,6 +605,12 @@ export const firmarActaDevolucionConToken = async (req: Request, res: Response):
     await transaction.commit();
     console.log('   ✅ Acta de devolución firmada exitosamente');
     
+    // Emitir evento WebSocket para actualización en tiempo real
+    const io = getIO();
+    const dispositivosIds = acta.detalles.map((d: any) => d.dispositivoId);
+    io.to('devoluciones').emit('devolucion:signed', { actaId: acta.id, estado: 'completada' });
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
+    
     // Enviar confirmación por correo (async, no bloqueante)
     const dispositivos = acta.detalles?.map((d: any) => ({
       tipo: d.dispositivo?.categoria || 'Dispositivo',
@@ -701,6 +713,12 @@ export const rechazarActaDevolucionConToken = async (req: Request, res: Response
     }
     
     await transaction.commit();
+    
+    // Emitir evento WebSocket para actualización en tiempo real
+    const io = getIO();
+    const dispositivosIds = (acta.detalles || []).map((d: any) => d.dispositivoId);
+    io.to('devoluciones').emit('devolucion:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
     
     res.json({
       msg: 'Acta de devolución rechazada',

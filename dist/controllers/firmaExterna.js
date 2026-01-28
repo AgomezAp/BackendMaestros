@@ -21,6 +21,7 @@ const detalleActa_1 = require("../models/detalleActa");
 const dispositivo_1 = require("../models/dispositivo");
 const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
 const email_1 = require("../config/email");
+const server_1 = require("../models/server");
 /**
  * Enviar correo de solicitud de firma para un acta
  */
@@ -279,6 +280,11 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
             }, { transaction });
         }
         yield transaction.commit();
+        // Emitir evento WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        const dispositivosIds = acta.detalles.map((d) => d.dispositivoId);
+        io.to('actas').emit('acta:signed', { actaId: acta.id, estado: 'activa' });
+        io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         // Enviar correo de confirmación (después del commit)
         try {
             const dispositivos = ((_a = acta.detalles) === null || _a === void 0 ? void 0 : _a.map((d) => {
@@ -361,6 +367,9 @@ const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
             transaction
         });
         yield transaction.commit();
+        // Emitir evento WebSocket para actualización en tiempo real
+        const io = (0, server_1.getIO)();
+        io.to('actas').emit('acta:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
         // Enviar notificación de rechazo
         try {
             if (correoNotificacion) {

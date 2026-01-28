@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import express, { Application } from 'express';
 import helmet from 'helmet';
 import path from 'path';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 import sequelize from '../database/connection';
 import RMaestros from '../routes/maestros';
@@ -28,22 +30,69 @@ import { TokenDevolucion } from './tokenDevolucion';
 
 dotenv.config();
 
+// Variable global para el socket
+let io: SocketIOServer;
+
+// Función para obtener la instancia de Socket.IO
+export const getIO = (): SocketIOServer => io;
+
 class Server {
   private app: Application;
   private port?: string;
+  private httpServer: http.Server;
+  private io: SocketIOServer;
 
   constructor() {
     this.app = express();
     this.port = process.env.PORT;
+    
+    // Crear servidor HTTP
+    this.httpServer = http.createServer(this.app);
+    
+    // Configurar Socket.IO
+    this.io = new SocketIOServer(this.httpServer, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+      }
+    });
+    
+    // Asignar a la variable global
+    io = this.io;
+    
     this.middlewares();
+    this.setupSocketIO();
     this.listen();
     this.DbConnection();
     this.routes();
   }
 
+  setupSocketIO() {
+    this.io.on('connection', (socket) => {
+      console.log('🔌 Cliente conectado:', socket.id);
+      
+      // Unirse a salas específicas
+      socket.on('join', (room: string) => {
+        socket.join(room);
+        console.log(`   Socket ${socket.id} se unió a: ${room}`);
+      });
+      
+      // Salir de salas
+      socket.on('leave', (room: string) => {
+        socket.leave(room);
+        console.log(`   Socket ${socket.id} salió de: ${room}`);
+      });
+      
+      socket.on('disconnect', () => {
+        console.log('🔌 Cliente desconectado:', socket.id);
+      });
+    });
+  }
+
   listen() {
-    this.app.listen(this.port, () => {
+    this.httpServer.listen(this.port, () => {
       console.log(`Server corriendo en el puerto ${this.port}`);
+      console.log(`WebSocket habilitado en el puerto ${this.port}`);
     });
   }
   middlewares() {

@@ -12,11 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getIO = void 0;
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 const helmet_1 = __importDefault(require("helmet"));
 const path_1 = __importDefault(require("path"));
+const http_1 = __importDefault(require("http"));
+const socket_io_1 = require("socket.io");
 const connection_1 = __importDefault(require("../database/connection"));
 const maestros_1 = __importDefault(require("../routes/maestros"));
 const user_1 = __importDefault(require("../routes/user"));
@@ -39,18 +42,54 @@ const actaDevolucion_2 = require("./actaDevolucion");
 const detalleDevolucion_1 = require("./detalleDevolucion");
 const tokenDevolucion_1 = require("./tokenDevolucion");
 dotenv_1.default.config();
+// Variable global para el socket
+let io;
+// Función para obtener la instancia de Socket.IO
+const getIO = () => io;
+exports.getIO = getIO;
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
         this.port = process.env.PORT;
+        // Crear servidor HTTP
+        this.httpServer = http_1.default.createServer(this.app);
+        // Configurar Socket.IO
+        this.io = new socket_io_1.Server(this.httpServer, {
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+            }
+        });
+        // Asignar a la variable global
+        io = this.io;
         this.middlewares();
+        this.setupSocketIO();
         this.listen();
         this.DbConnection();
         this.routes();
     }
+    setupSocketIO() {
+        this.io.on('connection', (socket) => {
+            console.log('🔌 Cliente conectado:', socket.id);
+            // Unirse a salas específicas
+            socket.on('join', (room) => {
+                socket.join(room);
+                console.log(`   Socket ${socket.id} se unió a: ${room}`);
+            });
+            // Salir de salas
+            socket.on('leave', (room) => {
+                socket.leave(room);
+                console.log(`   Socket ${socket.id} salió de: ${room}`);
+            });
+            socket.on('disconnect', () => {
+                console.log('🔌 Cliente desconectado:', socket.id);
+            });
+        });
+    }
     listen() {
-        this.app.listen(this.port, () => {
+        this.httpServer.listen(this.port, () => {
             console.log(`Server corriendo en el puerto ${this.port}`);
+            console.log(`WebSocket habilitado en el puerto ${this.port}`);
         });
     }
     middlewares() {

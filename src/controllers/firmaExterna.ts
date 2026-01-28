@@ -8,6 +8,7 @@ import { DetalleActa } from '../models/detalleActa';
 import { Dispositivo } from '../models/dispositivo';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo';
 import { enviarCorreoFirma, enviarActaFirmada, enviarNotificacionRechazo } from '../config/email';
+import { getIO } from '../models/server';
 
 /**
  * Enviar correo de solicitud de firma para un acta
@@ -305,6 +306,12 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
     
     await transaction.commit();
     
+    // Emitir evento WebSocket para actualización en tiempo real
+    const io = getIO();
+    const dispositivosIds = acta.detalles.map((d: any) => d.dispositivoId);
+    io.to('actas').emit('acta:signed', { actaId: acta.id, estado: 'activa' });
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
+    
     // Enviar correo de confirmación (después del commit)
     try {
       const dispositivos = acta.detalles?.map((d: any) => ({
@@ -399,6 +406,10 @@ export const rechazarActaConToken = async (req: Request, res: Response): Promise
     });
     
     await transaction.commit();
+    
+    // Emitir evento WebSocket para actualización en tiempo real
+    const io = getIO();
+    io.to('actas').emit('acta:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
     
     // Enviar notificación de rechazo
     try {
