@@ -125,10 +125,22 @@ exports.obtenerActaPorId = obtenerActaPorId;
 const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const transaction = yield connection_1.default.transaction();
     try {
-        const { nombreReceptor, cedulaReceptor, cargoReceptor, telefonoReceptor, correoReceptor, firmaReceptor, fechaDevolucionEsperada, observacionesEntrega, dispositivos, // Array de { dispositivoId, condicionEntrega, observaciones }
+        const { nombreReceptor, cedulaReceptor, cargoReceptor, telefonoReceptor, correoReceptor, firmaReceptor, fechaDevolucionEsperada, observacionesEntrega, dispositivos: dispositivosRaw, // Viene como string JSON desde FormData
         Uid } = req.body;
+        // Parsear dispositivos si viene como string
+        let dispositivos = dispositivosRaw;
+        if (typeof dispositivosRaw === 'string') {
+            try {
+                dispositivos = JSON.parse(dispositivosRaw);
+            }
+            catch (e) {
+                yield transaction.rollback();
+                res.status(400).json({ msg: 'Formato de dispositivos inválido' });
+                return;
+            }
+        }
         // Validar que haya dispositivos
-        if (!dispositivos || dispositivos.length === 0) {
+        if (!dispositivos || !Array.isArray(dispositivos) || dispositivos.length === 0) {
             yield transaction.rollback();
             res.status(400).json({ msg: 'Debe seleccionar al menos un dispositivo' });
             return;
@@ -150,7 +162,7 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         // Generar número de acta
         const numeroActa = yield generarNumeroActa();
-        // Crear el acta
+        // Crear el acta (sin firma, se firmará por correo)
         const acta = yield actaEntrega_1.ActaEntrega.create({
             numeroActa,
             nombreReceptor,
@@ -158,10 +170,10 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
             cargoReceptor,
             telefonoReceptor,
             correoReceptor,
-            firmaReceptor,
+            firmaReceptor: null, // Sin firma inicial
             fechaEntrega: new Date(),
             fechaDevolucionEsperada,
-            estado: 'activa',
+            estado: 'pendiente_firma', // Estado pendiente de firma
             observacionesEntrega,
             Uid
         }, { transaction });
@@ -189,15 +201,15 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 observacionesEntrega: item.observaciones,
                 devuelto: false
             }, { transaction });
-            // Actualizar estado del dispositivo a entregado
-            yield dispositivo_1.Dispositivo.update({ estado: 'entregado' }, { where: { id: item.dispositivoId }, transaction });
+            // Actualizar estado del dispositivo a reservado (pendiente de firma)
+            yield dispositivo_1.Dispositivo.update({ estado: 'reservado' }, { where: { id: item.dispositivoId }, transaction });
             // Registrar movimiento
             yield movimientoDispositivo_1.MovimientoDispositivo.create({
                 dispositivoId: item.dispositivoId,
-                tipoMovimiento: 'entrega',
+                tipoMovimiento: 'reserva',
                 estadoAnterior: 'disponible',
-                estadoNuevo: 'entregado',
-                descripcion: `Entregado a ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa}`,
+                estadoNuevo: 'reservado',
+                descripcion: `Reservado para ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa} pendiente de firma`,
                 actaId: acta.id,
                 fecha: new Date(),
                 Uid
@@ -238,8 +250,22 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
     const transaction = yield connection_1.default.transaction();
     try {
         const { id } = req.params; // ID del acta
-        const { devoluciones, // Array de { detalleId, estadoDevolucion, condicionDevolucion, observaciones }
+        const { devoluciones: devolucionesRaw, // Viene como string JSON desde FormData
         observacionesDevolucion, Uid } = req.body;
+        // Parsear devoluciones si viene como string
+        let devoluciones = devolucionesRaw;
+        if (typeof devolucionesRaw === 'string') {
+            try {
+                devoluciones = JSON.parse(devolucionesRaw);
+            }
+            catch (e) {
+                yield transaction.rollback();
+                res.status(400).json({ msg: 'Formato de devoluciones inválido' });
+                return;
+            }
+        }
+        console.log('📦 Procesando devolución para acta:', id);
+        console.log('   Dispositivos a devolver:', (devoluciones === null || devoluciones === void 0 ? void 0 : devoluciones.length) || 0);
         const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
             include: [{ model: detalleActa_1.DetalleActa, as: 'detalles' }],
             transaction
@@ -262,9 +288,15 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         // Procesar cada devolución
         for (const devolucion of devoluciones) {
+            console.log('   Procesando devolución de detalle:', devolucion.detalleId);
             const detalle = yield detalleActa_1.DetalleActa.findByPk(devolucion.detalleId, { transaction });
-            if (!detalle || detalle.devuelto) {
-                continue; // Saltar si ya fue devuelto
+            if (!detalle) {
+                console.log('   ⚠️ Detalle no encontrado:', devolucion.detalleId);
+                continue;
+            }
+            if (detalle.devuelto) {
+                console.log('   ⚠️ Detalle ya devuelto:', devolucion.detalleId);
+                continue;
             }
             // Actualizar detalle del acta
             yield detalle.update({
@@ -275,6 +307,7 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 fotosDevolucion: JSON.stringify(fotosMap[devolucion.detalleId] || []),
                 observacionesDevolucion: devolucion.observaciones
             }, { transaction });
+            console.log('   ✅ Detalle actualizado como devuelto');
             // Actualizar estado del dispositivo según la devolución
             let nuevoEstado = 'disponible';
             if (devolucion.estadoDevolucion === 'dañado') {
@@ -283,10 +316,12 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
             else if (devolucion.estadoDevolucion === 'perdido') {
                 nuevoEstado = 'perdido';
             }
+            console.log('   Cambiando estado de dispositivo', detalle.dispositivoId, 'a:', nuevoEstado);
             yield dispositivo_1.Dispositivo.update({
                 estado: nuevoEstado,
                 condicion: devolucion.condicionDevolucion
             }, { where: { id: detalle.dispositivoId }, transaction });
+            console.log('   ✅ Estado de dispositivo actualizado');
             // Registrar movimiento
             yield movimientoDispositivo_1.MovimientoDispositivo.create({
                 dispositivoId: detalle.dispositivoId,
@@ -298,6 +333,7 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 fecha: new Date(),
                 Uid
             }, { transaction });
+            console.log('   ✅ Movimiento registrado');
         }
         // Verificar si todos los dispositivos fueron devueltos
         const detallesActualizados = yield detalleActa_1.DetalleActa.findAll({

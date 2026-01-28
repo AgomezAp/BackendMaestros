@@ -31,7 +31,7 @@ MovimientoDispositivo.init({
         comment: 'ID del dispositivo'
     },
     tipoMovimiento: {
-        type: sequelize_1.DataTypes.ENUM('ingreso', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja'),
+        type: sequelize_1.DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega'),
         allowNull: false,
         comment: 'Tipo de movimiento realizado'
     },

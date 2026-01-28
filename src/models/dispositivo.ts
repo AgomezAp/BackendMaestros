@@ -4,7 +4,7 @@ import { User } from './user';
 
 /**
  * Modelo Dispositivo - Inventario principal de equipos
- * Estados: disponible, entregado, dañado, perdido, obsoleto
+ * Estados: disponible, reservado, entregado, dañado, perdido, obsoleto
  */
 export class Dispositivo extends Model {
   public id!: number;
@@ -16,7 +16,7 @@ export class Dispositivo extends Model {
   public imei!: string; // Solo para celulares/tablets
   public color!: string;
   public descripcion!: string;
-  public estado!: string; // disponible, entregado, dañado, perdido, obsoleto
+  public estado!: string; // disponible, reservado, entregado, dañado, perdido, obsoleto
   public condicion!: string; // nuevo, bueno, regular, malo
   public ubicacion!: string; // Almacén o ubicación física
   public fotos!: string; // JSON array de URLs
@@ -71,7 +71,7 @@ Dispositivo.init(
       comment: 'Descripción detallada del dispositivo'
     },
     estado: {
-      type: DataTypes.ENUM('disponible', 'entregado', 'dañado', 'perdido', 'obsoleto'),
+      type: DataTypes.ENUM('disponible', 'reservado', 'entregado', 'dañado', 'perdido', 'obsoleto'),
       defaultValue: 'disponible',
       comment: 'Estado actual del dispositivo en el inventario'
     },

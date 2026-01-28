@@ -16,12 +16,14 @@ export class ActaEntrega extends Model {
   public correoReceptor!: string;
   public firmaReceptor!: string; // Base64 de la firma digital
   public fechaEntrega!: Date;
+  public fechaFirma!: Date; // Fecha cuando se firmó digitalmente
   public fechaDevolucionEsperada!: Date;
   public fechaDevolucionReal!: Date;
-  public estado!: string; // activa, devuelta_parcial, devuelta_completa, vencida
+  public estado!: string; // pendiente_firma, activa, devuelta_parcial, devuelta_completa, vencida, rechazada
   public observacionesEntrega!: string;
   public observacionesDevolucion!: string;
   public Uid!: number; // Usuario que creó el acta
+  public detalles?: any[]; // Relación con DetalleActa
 }
 
 ActaEntrega.init(
@@ -62,13 +64,18 @@ ActaEntrega.init(
     },
     firmaReceptor: {
       type: DataTypes.TEXT('long'),
-      allowNull: false,
+      allowNull: true,
       comment: 'Firma digital en formato Base64'
     },
     fechaEntrega: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
       comment: 'Fecha y hora de la entrega'
+    },
+    fechaFirma: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'Fecha y hora cuando se firmó digitalmente'
     },
     fechaDevolucionEsperada: {
       type: DataTypes.DATEONLY,
@@ -81,8 +88,8 @@ ActaEntrega.init(
       comment: 'Fecha real de devolución completa'
     },
     estado: {
-      type: DataTypes.ENUM('activa', 'devuelta_parcial', 'devuelta_completa', 'vencida'),
-      defaultValue: 'activa',
+      type: DataTypes.ENUM('pendiente_firma', 'activa', 'devuelta_parcial', 'devuelta_completa', 'vencida', 'rechazada'),
+      defaultValue: 'pendiente_firma',
       comment: 'Estado del acta de entrega'
     },
     observacionesEntrega: {

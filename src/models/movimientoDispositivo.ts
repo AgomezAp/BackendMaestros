@@ -10,7 +10,7 @@ import { User } from './user';
 export class MovimientoDispositivo extends Model {
   public id!: number;
   public dispositivoId!: number;
-  public tipoMovimiento!: string; // ingreso, prestamo, devolucion, cambio_estado, actualizacion
+  public tipoMovimiento!: string; // ingreso, reserva, prestamo, devolucion, cambio_estado, actualizacion, firma_entrega
   public estadoAnterior!: string;
   public estadoNuevo!: string;
   public descripcion!: string;
@@ -36,7 +36,7 @@ MovimientoDispositivo.init(
       comment: 'ID del dispositivo'
     },
     tipoMovimiento: {
-      type: DataTypes.ENUM('ingreso', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja'),
+      type: DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega'),
       allowNull: false,
       comment: 'Tipo de movimiento realizado'
     },

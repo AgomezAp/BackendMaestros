@@ -14,15 +14,19 @@
   "description": "",
   "dependencies": {
     "@types/multer": "^2.0.0",
+    "@types/nodemailer": "^7.0.9",
+    "@types/uuid": "^10.0.0",
     "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "multer": "^2.0.2",
     "mysql2": "^3.11.5",
+    "nodemailer": "^7.0.13",
     "pg": "^8.13.1",
     "postgres": "^3.4.5",
-    "sequelize": "^6.37.5"
+    "sequelize": "^6.37.5",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

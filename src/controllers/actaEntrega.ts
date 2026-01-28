@@ -132,12 +132,24 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       firmaReceptor,
       fechaDevolucionEsperada,
       observacionesEntrega,
-      dispositivos, // Array de { dispositivoId, condicionEntrega, observaciones }
+      dispositivos: dispositivosRaw, // Viene como string JSON desde FormData
       Uid
     } = req.body;
     
+    // Parsear dispositivos si viene como string
+    let dispositivos = dispositivosRaw;
+    if (typeof dispositivosRaw === 'string') {
+      try {
+        dispositivos = JSON.parse(dispositivosRaw);
+      } catch (e) {
+        await transaction.rollback();
+        res.status(400).json({ msg: 'Formato de dispositivos inválido' });
+        return;
+      }
+    }
+    
     // Validar que haya dispositivos
-    if (!dispositivos || dispositivos.length === 0) {
+    if (!dispositivos || !Array.isArray(dispositivos) || dispositivos.length === 0) {
       await transaction.rollback();
       res.status(400).json({ msg: 'Debe seleccionar al menos un dispositivo' });
       return;
@@ -163,7 +175,7 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
     // Generar número de acta
     const numeroActa = await generarNumeroActa();
     
-    // Crear el acta
+    // Crear el acta (sin firma, se firmará por correo)
     const acta = await ActaEntrega.create({
       numeroActa,
       nombreReceptor,
@@ -171,10 +183,10 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       cargoReceptor,
       telefonoReceptor,
       correoReceptor,
-      firmaReceptor,
+      firmaReceptor: null, // Sin firma inicial
       fechaEntrega: new Date(),
       fechaDevolucionEsperada,
-      estado: 'activa',
+      estado: 'pendiente_firma', // Estado pendiente de firma
       observacionesEntrega,
       Uid
     }, { transaction });
@@ -206,19 +218,19 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
         devuelto: false
       }, { transaction });
       
-      // Actualizar estado del dispositivo a entregado
+      // Actualizar estado del dispositivo a reservado (pendiente de firma)
       await Dispositivo.update(
-        { estado: 'entregado' },
+        { estado: 'reservado' },
         { where: { id: item.dispositivoId }, transaction }
       );
       
       // Registrar movimiento
       await MovimientoDispositivo.create({
         dispositivoId: item.dispositivoId,
-        tipoMovimiento: 'entrega',
+        tipoMovimiento: 'reserva' as any,
         estadoAnterior: 'disponible',
-        estadoNuevo: 'entregado',
-        descripcion: `Entregado a ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa}`,
+        estadoNuevo: 'reservado',
+        descripcion: `Reservado para ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa} pendiente de firma`,
         actaId: acta.id,
         fecha: new Date(),
         Uid
@@ -263,10 +275,25 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
   try {
     const { id } = req.params; // ID del acta
     const {
-      devoluciones, // Array de { detalleId, estadoDevolucion, condicionDevolucion, observaciones }
+      devoluciones: devolucionesRaw, // Viene como string JSON desde FormData
       observacionesDevolucion,
       Uid
     } = req.body;
+    
+    // Parsear devoluciones si viene como string
+    let devoluciones = devolucionesRaw;
+    if (typeof devolucionesRaw === 'string') {
+      try {
+        devoluciones = JSON.parse(devolucionesRaw);
+      } catch (e) {
+        await transaction.rollback();
+        res.status(400).json({ msg: 'Formato de devoluciones inválido' });
+        return;
+      }
+    }
+    
+    console.log('📦 Procesando devolución para acta:', id);
+    console.log('   Dispositivos a devolver:', devoluciones?.length || 0);
     
     const acta = await ActaEntrega.findByPk(Number(id), {
       include: [{ model: DetalleActa, as: 'detalles' }],
@@ -293,10 +320,18 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
     
     // Procesar cada devolución
     for (const devolucion of devoluciones) {
+      console.log('   Procesando devolución de detalle:', devolucion.detalleId);
+      
       const detalle = await DetalleActa.findByPk(devolucion.detalleId, { transaction });
       
-      if (!detalle || detalle.devuelto) {
-        continue; // Saltar si ya fue devuelto
+      if (!detalle) {
+        console.log('   ⚠️ Detalle no encontrado:', devolucion.detalleId);
+        continue;
+      }
+      
+      if (detalle.devuelto) {
+        console.log('   ⚠️ Detalle ya devuelto:', devolucion.detalleId);
+        continue;
       }
       
       // Actualizar detalle del acta
@@ -309,6 +344,8 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
         observacionesDevolucion: devolucion.observaciones
       }, { transaction });
       
+      console.log('   ✅ Detalle actualizado como devuelto');
+      
       // Actualizar estado del dispositivo según la devolución
       let nuevoEstado = 'disponible';
       if (devolucion.estadoDevolucion === 'dañado') {
@@ -317,13 +354,17 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
         nuevoEstado = 'perdido';
       }
       
+      console.log('   Cambiando estado de dispositivo', detalle.dispositivoId, 'a:', nuevoEstado);
+      
       await Dispositivo.update(
         { 
-          estado: nuevoEstado,
+          estado: nuevoEstado as any,
           condicion: devolucion.condicionDevolucion
         },
         { where: { id: detalle.dispositivoId }, transaction }
       );
+      
+      console.log('   ✅ Estado de dispositivo actualizado');
       
       // Registrar movimiento
       await MovimientoDispositivo.create({
@@ -336,6 +377,8 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
         fecha: new Date(),
         Uid
       }, { transaction });
+      
+      console.log('   ✅ Movimiento registrado');
     }
     
     // Verificar si todos los dispositivos fueron devueltos

@@ -23,6 +23,8 @@ const user_1 = __importDefault(require("../routes/user"));
 const analista_1 = __importDefault(require("../routes/analista"));
 const dispositivo_1 = __importDefault(require("../routes/dispositivo"));
 const actaEntrega_1 = __importDefault(require("../routes/actaEntrega"));
+const firmaExterna_1 = __importDefault(require("../routes/firmaExterna"));
+const actaDevolucion_1 = __importDefault(require("../routes/actaDevolucion"));
 const maestroBorrado_1 = require("./maestroBorrado");
 const maestros_2 = require("./maestros");
 const movimientoMaestro_1 = require("./movimientoMaestro");
@@ -32,6 +34,10 @@ const dispositivo_2 = require("./dispositivo");
 const actaEntrega_2 = require("./actaEntrega");
 const detalleActa_1 = require("./detalleActa");
 const movimientoDispositivo_1 = require("./movimientoDispositivo");
+const tokenFirma_1 = require("./tokenFirma");
+const actaDevolucion_2 = require("./actaDevolucion");
+const detalleDevolucion_1 = require("./detalleDevolucion");
+const tokenDevolucion_1 = require("./tokenDevolucion");
 dotenv_1.default.config();
 class Server {
     constructor() {
@@ -96,6 +102,8 @@ class Server {
         this.app.use(analista_1.default);
         this.app.use('/api/dispositivos', dispositivo_1.default);
         this.app.use('/api/actas', actaEntrega_1.default);
+        this.app.use('/api/firma', firmaExterna_1.default);
+        this.app.use('/api/actas-devolucion', actaDevolucion_1.default);
     }
     DbConnection() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -115,6 +123,11 @@ class Server {
                 yield actaEntrega_2.ActaEntrega.sync();
                 yield detalleActa_1.DetalleActa.sync();
                 yield movimientoDispositivo_1.MovimientoDispositivo.sync();
+                yield tokenFirma_1.TokenFirma.sync();
+                // Modelos de devolución
+                yield actaDevolucion_2.ActaDevolucion.sync();
+                yield detalleDevolucion_1.DetalleDevolucion.sync();
+                yield tokenDevolucion_1.TokenDevolucion.sync();
                 console.log("Conexión a la base de datos exitosa");
             }
             catch (error) {
@@ -124,6 +137,7 @@ class Server {
     }
     /**
      * Migración para cambiar el ENUM de estado de 'prestado' a 'entregado'
+     * y agregar nuevos valores de ENUM
      */
     migrateEstadoEnum() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -148,12 +162,47 @@ class Server {
         `);
                     console.log('Migración de estado completada');
                 }
-                else if (!labels.includes('entregado') && !labels.includes('prestado')) {
-                    // El ENUM puede no existir aún
-                    console.log('El ENUM de estado se creará con sync()');
+                // Agregar 'reservado' si no existe
+                if (!labels.includes('reservado')) {
+                    console.log('Agregando estado: reservado...');
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_dispositivos_estado" ADD VALUE IF NOT EXISTS 'reservado';
+        `);
+                    console.log('Estado reservado agregado');
                 }
-                else {
-                    console.log('Migración de estado ya aplicada o no necesaria');
+                // Verificar y agregar nuevos estados de acta si es necesario
+                const [actaResults] = yield connection_1.default.query(`
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_actas_entrega_estado')
+      `);
+                const actaLabels = actaResults.map(r => r.enumlabel);
+                if (!actaLabels.includes('pendiente_firma')) {
+                    console.log('Agregando estados de acta: pendiente_firma, rechazada...');
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'pendiente_firma';
+        `);
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'rechazada';
+        `);
+                    console.log('Estados de acta agregados');
+                }
+                // Verificar y agregar nuevos tipos de movimiento
+                const [movResults] = yield connection_1.default.query(`
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_movimientos_dispositivo_tipoMovimiento')
+      `);
+                const movLabels = movResults.map(r => r.enumlabel);
+                if (!movLabels.includes('reserva')) {
+                    console.log('Agregando tipos de movimiento: reserva, firma_entrega...');
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'reserva';
+        `);
+                    yield connection_1.default.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'firma_entrega';
+        `);
+                    console.log('Tipos de movimiento agregados');
                 }
             }
             catch (error) {

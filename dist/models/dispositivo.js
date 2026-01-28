@@ -9,7 +9,7 @@ const connection_1 = __importDefault(require("../database/connection"));
 const user_1 = require("./user");
 /**
  * Modelo Dispositivo - Inventario principal de equipos
- * Estados: disponible, entregado, dañado, perdido, obsoleto
+ * Estados: disponible, reservado, entregado, dañado, perdido, obsoleto
  */
 class Dispositivo extends sequelize_1.Model {
 }
@@ -59,7 +59,7 @@ Dispositivo.init({
         comment: 'Descripción detallada del dispositivo'
     },
     estado: {
-        type: sequelize_1.DataTypes.ENUM('disponible', 'entregado', 'dañado', 'perdido', 'obsoleto'),
+        type: sequelize_1.DataTypes.ENUM('disponible', 'reservado', 'entregado', 'dañado', 'perdido', 'obsoleto'),
         defaultValue: 'disponible',
         comment: 'Estado actual del dispositivo en el inventario'
     },

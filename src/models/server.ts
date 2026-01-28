@@ -10,6 +10,8 @@ import RUser from '../routes/user';
 import RAnalista from '../routes/analista';
 import RDispositivo from '../routes/dispositivo';
 import RActaEntrega from '../routes/actaEntrega';
+import RFirmaExterna from '../routes/firmaExterna';
+import RActaDevolucion from '../routes/actaDevolucion';
 import { maestroBorrado } from './maestroBorrado';
 import { Maestro } from './maestros';
 import { MovimientoMaestro } from './movimientoMaestro';
@@ -19,6 +21,10 @@ import { Dispositivo } from './dispositivo';
 import { ActaEntrega } from './actaEntrega';
 import { DetalleActa } from './detalleActa';
 import { MovimientoDispositivo } from './movimientoDispositivo';
+import { TokenFirma } from './tokenFirma';
+import { ActaDevolucion } from './actaDevolucion';
+import { DetalleDevolucion } from './detalleDevolucion';
+import { TokenDevolucion } from './tokenDevolucion';
 
 dotenv.config();
 
@@ -94,6 +100,8 @@ class Server {
     this.app.use(RAnalista);
     this.app.use('/api/dispositivos', RDispositivo);
     this.app.use('/api/actas', RActaEntrega);
+    this.app.use('/api/firma', RFirmaExterna);
+    this.app.use('/api/actas-devolucion', RActaDevolucion);
   }
 
   async DbConnection() {
@@ -116,6 +124,11 @@ class Server {
       await ActaEntrega.sync(); 
       await DetalleActa.sync();
       await MovimientoDispositivo.sync();
+      await TokenFirma.sync();
+      // Modelos de devolución
+      await ActaDevolucion.sync();
+      await DetalleDevolucion.sync();
+      await TokenDevolucion.sync();
       console.log("Conexión a la base de datos exitosa");
     } catch (error) {
       console.log("Error al conectar a la base de datos", error);
@@ -124,6 +137,7 @@ class Server {
 
   /**
    * Migración para cambiar el ENUM de estado de 'prestado' a 'entregado'
+   * y agregar nuevos valores de ENUM
    */
   async migrateEstadoEnum() {
     try {
@@ -150,12 +164,57 @@ class Server {
         `);
         
         console.log('Migración de estado completada');
-      } else if (!labels.includes('entregado') && !labels.includes('prestado')) {
-        // El ENUM puede no existir aún
-        console.log('El ENUM de estado se creará con sync()');
-      } else {
-        console.log('Migración de estado ya aplicada o no necesaria');
       }
+      
+      // Agregar 'reservado' si no existe
+      if (!labels.includes('reservado')) {
+        console.log('Agregando estado: reservado...');
+        await sequelize.query(`
+          ALTER TYPE "enum_dispositivos_estado" ADD VALUE IF NOT EXISTS 'reservado';
+        `);
+        console.log('Estado reservado agregado');
+      }
+      
+      // Verificar y agregar nuevos estados de acta si es necesario
+      const [actaResults] = await sequelize.query(`
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_actas_entrega_estado')
+      `);
+      
+      const actaLabels = (actaResults as any[]).map(r => r.enumlabel);
+      
+      if (!actaLabels.includes('pendiente_firma')) {
+        console.log('Agregando estados de acta: pendiente_firma, rechazada...');
+        await sequelize.query(`
+          ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'pendiente_firma';
+        `);
+        await sequelize.query(`
+          ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'rechazada';
+        `);
+        console.log('Estados de acta agregados');
+      }
+      
+      // Verificar y agregar nuevos tipos de movimiento
+      const [movResults] = await sequelize.query(`
+        SELECT enumlabel 
+        FROM pg_enum 
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_movimientos_dispositivo_tipoMovimiento')
+      `);
+      
+      const movLabels = (movResults as any[]).map(r => r.enumlabel);
+      
+      if (!movLabels.includes('reserva')) {
+        console.log('Agregando tipos de movimiento: reserva, firma_entrega...');
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'reserva';
+        `);
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'firma_entrega';
+        `);
+        console.log('Tipos de movimiento agregados');
+      }
+      
     } catch (error: any) {
       // Si falla, probablemente el ENUM no existe aún (primera vez)
       if (!error.message?.includes('does not exist')) {

@@ -51,13 +51,18 @@ ActaEntrega.init({
     },
     firmaReceptor: {
         type: sequelize_1.DataTypes.TEXT('long'),
-        allowNull: false,
+        allowNull: true,
         comment: 'Firma digital en formato Base64'
     },
     fechaEntrega: {
         type: sequelize_1.DataTypes.DATE,
         defaultValue: sequelize_1.DataTypes.NOW,
         comment: 'Fecha y hora de la entrega'
+    },
+    fechaFirma: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true,
+        comment: 'Fecha y hora cuando se firmó digitalmente'
     },
     fechaDevolucionEsperada: {
         type: sequelize_1.DataTypes.DATEONLY,
@@ -70,8 +75,8 @@ ActaEntrega.init({
         comment: 'Fecha real de devolución completa'
     },
     estado: {
-        type: sequelize_1.DataTypes.ENUM('activa', 'devuelta_parcial', 'devuelta_completa', 'vencida'),
-        defaultValue: 'activa',
+        type: sequelize_1.DataTypes.ENUM('pendiente_firma', 'activa', 'devuelta_parcial', 'devuelta_completa', 'vencida', 'rechazada'),
+        defaultValue: 'pendiente_firma',
         comment: 'Estado del acta de entrega'
     },
     observacionesEntrega: {
