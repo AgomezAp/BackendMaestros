@@ -3,9 +3,9 @@ import {
   Model,
 } from 'sequelize';
 
-import sequelize from '../database/connection';
-import { User } from './user';
-import { Analista } from './analista';
+import sequelize from '../database/connection.js';
+import { User } from './user.js';
+import { Analista } from './analista.js';
 
 export class Maestro extends Model {
   public Mid!: number;

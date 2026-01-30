@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,31 +7,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.reenviarCorreoDevolucion = exports.rechazarActaDevolucionConToken = exports.firmarActaDevolucionConToken = exports.obtenerActaDevolucionPorToken = exports.enviarSolicitudFirmaDevolucion = exports.crearActaDevolucion = exports.obtenerActaDevolucionPorId = exports.obtenerActasDevolucion = exports.obtenerDispositivosEntregados = void 0;
-const sequelize_1 = require("sequelize");
-const uuid_1 = require("uuid");
-const connection_1 = __importDefault(require("../database/connection"));
-const actaDevolucion_1 = require("../models/actaDevolucion");
-const detalleDevolucion_1 = require("../models/detalleDevolucion");
-const tokenDevolucion_1 = require("../models/tokenDevolucion");
-const dispositivo_1 = require("../models/dispositivo");
-const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
-const email_1 = require("../config/email");
-const multer_1 = require("../config/multer");
-const server_1 = require("../models/server");
+import { Op } from 'sequelize';
+import { v4 as uuidv4 } from 'uuid';
+import sequelize from '../database/connection.js';
+import { ActaDevolucion } from '../models/actaDevolucion.js';
+import { DetalleDevolucion } from '../models/detalleDevolucion.js';
+import { TokenDevolucion } from '../models/tokenDevolucion.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { enviarCorreoDevolucion, enviarConfirmacionDevolucion } from '../config/email.js';
+import { getPhotoUrl } from '../config/multer.js';
+import { getIO } from '../models/server.js';
 /**
  * Generar número de acta de devolución único
  */
 const generarNumeroActaDevolucion = () => __awaiter(void 0, void 0, void 0, function* () {
     const year = new Date().getFullYear();
-    const ultimaActa = yield actaDevolucion_1.ActaDevolucion.findOne({
+    const ultimaActa = yield ActaDevolucion.findOne({
         where: {
             numeroActa: {
-                [sequelize_1.Op.like]: `DEV-${year}-%`
+                [Op.like]: `DEV-${year}-%`
             }
         },
         order: [['id', 'DESC']]
@@ -47,9 +41,9 @@ const generarNumeroActaDevolucion = () => __awaiter(void 0, void 0, void 0, func
 /**
  * Obtener dispositivos entregados (disponibles para devolución)
  */
-const obtenerDispositivosEntregados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerDispositivosEntregados = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const dispositivos = yield dispositivo_1.Dispositivo.findAll({
+        const dispositivos = yield Dispositivo.findAll({
             where: { estado: 'entregado' },
             order: [['nombre', 'ASC']]
         });
@@ -60,11 +54,10 @@ const obtenerDispositivosEntregados = (req, res) => __awaiter(void 0, void 0, vo
         res.status(500).json({ msg: 'Error al obtener los dispositivos entregados' });
     }
 });
-exports.obtenerDispositivosEntregados = obtenerDispositivosEntregados;
 /**
  * Obtener todas las actas de devolución
  */
-const obtenerActasDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActasDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { estado, busqueda } = req.query;
         let where = {};
@@ -72,21 +65,21 @@ const obtenerActasDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, f
             where.estado = estado;
         }
         if (busqueda) {
-            where[sequelize_1.Op.or] = [
-                { numeroActa: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { nombreEntrega: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { nombreReceptor: { [sequelize_1.Op.iLike]: `%${busqueda}%` } }
+            where[Op.or] = [
+                { numeroActa: { [Op.iLike]: `%${busqueda}%` } },
+                { nombreEntrega: { [Op.iLike]: `%${busqueda}%` } },
+                { nombreReceptor: { [Op.iLike]: `%${busqueda}%` } }
             ];
         }
-        const actas = yield actaDevolucion_1.ActaDevolucion.findAll({
+        const actas = yield ActaDevolucion.findAll({
             where,
             include: [
                 {
-                    model: detalleDevolucion_1.DetalleDevolucion,
+                    model: DetalleDevolucion,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo',
                             attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial', 'imei']
                         }
@@ -103,21 +96,20 @@ const obtenerActasDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, f
         res.status(500).json({ msg: 'Error al obtener las actas de devolución' });
     }
 });
-exports.obtenerActasDevolucion = obtenerActasDevolucion;
 /**
  * Obtener acta de devolución por ID
  */
-const obtenerActaDevolucionPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActaDevolucionPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const acta = yield actaDevolucion_1.ActaDevolucion.findByPk(Number(id), {
+        const acta = yield ActaDevolucion.findByPk(Number(id), {
             include: [
                 {
-                    model: detalleDevolucion_1.DetalleDevolucion,
+                    model: DetalleDevolucion,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -135,12 +127,11 @@ const obtenerActaDevolucionPorId = (req, res) => __awaiter(void 0, void 0, void 
         res.status(500).json({ msg: 'Error al obtener el acta de devolución' });
     }
 });
-exports.obtenerActaDevolucionPorId = obtenerActaDevolucionPorId;
 /**
  * Crear nueva acta de devolución
  */
-const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const transaction = yield connection_1.default.transaction();
+export const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transaction = yield sequelize.transaction();
     try {
         const { nombreReceptor, cargoReceptor, correoReceptor, firmaReceptor, // Firma del receptor (sistemas) al crear el acta
         nombreEntrega, cargoEntrega, correoEntrega, observaciones, dispositivos: dispositivosRaw, Uid } = req.body;
@@ -175,7 +166,7 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         // Verificar que todos los dispositivos estén entregados
         const dispositivosIds = dispositivos.map((d) => d.dispositivoId);
-        const dispositivosDB = yield dispositivo_1.Dispositivo.findAll({
+        const dispositivosDB = yield Dispositivo.findAll({
             where: { id: dispositivosIds },
             transaction
         });
@@ -191,7 +182,7 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         // Generar número de acta
         const numeroActa = yield generarNumeroActaDevolucion();
         // Crear el acta con la firma del receptor (sistemas)
-        const acta = yield actaDevolucion_1.ActaDevolucion.create({
+        const acta = yield ActaDevolucion.create({
             numeroActa,
             nombreReceptor,
             cargoReceptor,
@@ -215,14 +206,14 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 if (!fotosMap[dispositivoId]) {
                     fotosMap[dispositivoId] = [];
                 }
-                fotosMap[dispositivoId].push((0, multer_1.getPhotoUrl)(file.filename, 'devoluciones'));
+                fotosMap[dispositivoId].push(getPhotoUrl(file.filename, 'devoluciones'));
             }
         }
         // Crear detalles del acta y reservar dispositivos
         for (const item of dispositivos) {
             const dispositivo = dispositivosDB.find(d => d.id === item.dispositivoId);
             // Crear detalle
-            yield detalleDevolucion_1.DetalleDevolucion.create({
+            yield DetalleDevolucion.create({
                 actaDevolucionId: acta.id,
                 dispositivoId: item.dispositivoId,
                 estadoDevolucion: item.estadoDevolucion || 'disponible',
@@ -231,9 +222,9 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 observaciones: item.observaciones
             }, { transaction });
             // Cambiar estado del dispositivo a "reservado" hasta que se firme
-            yield dispositivo_1.Dispositivo.update({ estado: 'reservado' }, { where: { id: item.dispositivoId }, transaction });
+            yield Dispositivo.update({ estado: 'reservado' }, { where: { id: item.dispositivoId }, transaction });
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: item.dispositivoId,
                 tipoMovimiento: 'reserva',
                 estadoAnterior: 'entregado',
@@ -246,14 +237,14 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         yield transaction.commit();
         console.log('   ✅ Acta de devolución creada exitosamente');
         // Obtener acta completa con detalles
-        const actaCompleta = yield actaDevolucion_1.ActaDevolucion.findByPk(acta.id, {
+        const actaCompleta = yield ActaDevolucion.findByPk(acta.id, {
             include: [
                 {
-                    model: detalleDevolucion_1.DetalleDevolucion,
+                    model: DetalleDevolucion,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -261,7 +252,7 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
             ]
         });
         // Emitir evento WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         io.to('devoluciones').emit('devolucion:created', actaCompleta);
         io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         res.status(201).json({
@@ -275,25 +266,24 @@ const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al crear el acta de devolución' });
     }
 });
-exports.crearActaDevolucion = crearActaDevolucion;
 /**
  * Enviar correo de solicitud de firma para acta de devolución
  * Se envía al EMPLEADO que devuelve para que firme
  */
-const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const transaction = yield connection_1.default.transaction();
+    const transaction = yield sequelize.transaction();
     console.log('📧 [enviarSolicitudFirmaDevolucion] Iniciando proceso...');
     try {
         const { id } = req.params;
-        const acta = yield actaDevolucion_1.ActaDevolucion.findByPk(Number(id), {
+        const acta = yield ActaDevolucion.findByPk(Number(id), {
             include: [
                 {
-                    model: detalleDevolucion_1.DetalleDevolucion,
+                    model: DetalleDevolucion,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -315,7 +305,7 @@ const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, v
         console.log('   Acta encontrada:', acta.numeroActa);
         console.log('   Correo empleado (quien devuelve):', acta.correoEntrega);
         // Cancelar tokens anteriores pendientes
-        yield tokenDevolucion_1.TokenDevolucion.update({ estado: 'cancelado' }, {
+        yield TokenDevolucion.update({ estado: 'cancelado' }, {
             where: {
                 actaDevolucionId: acta.id,
                 estado: 'pendiente'
@@ -323,9 +313,9 @@ const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, v
             transaction
         });
         // Generar nuevo token
-        const token = (0, uuid_1.v4)();
+        const token = uuidv4();
         // Crear registro del token - se envía al empleado
-        yield tokenDevolucion_1.TokenDevolucion.create({
+        yield TokenDevolucion.create({
             token,
             actaDevolucionId: acta.id,
             correoDestinatario: acta.correoEntrega,
@@ -347,7 +337,7 @@ const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, v
         })) || [];
         // Enviar correo al EMPLEADO (nombreEntrega)
         console.log('   Enviando correo a:', acta.correoEntrega);
-        yield (0, email_1.enviarCorreoDevolucion)(acta.correoEntrega, acta.nombreEntrega, // Nombre del empleado
+        yield enviarCorreoDevolucion(acta.correoEntrega, acta.nombreEntrega, // Nombre del empleado
         token, dispositivos, acta.observaciones);
         yield transaction.commit();
         console.log('   ✅ Correo enviado exitosamente');
@@ -362,27 +352,26 @@ const enviarSolicitudFirmaDevolucion = (req, res) => __awaiter(void 0, void 0, v
         res.status(500).json({ msg: error.message || 'Error al enviar la solicitud de firma' });
     }
 });
-exports.enviarSolicitudFirmaDevolucion = enviarSolicitudFirmaDevolucion;
 /**
  * Obtener datos del acta de devolución por token (PÚBLICO)
  */
-const obtenerActaDevolucionPorToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActaDevolucionPorToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const { token } = req.params;
-        const tokenFirma = yield tokenDevolucion_1.TokenDevolucion.findOne({
+        const tokenFirma = yield TokenDevolucion.findOne({
             where: { token },
             include: [
                 {
-                    model: actaDevolucion_1.ActaDevolucion,
+                    model: ActaDevolucion,
                     as: 'actaDevolucion',
                     include: [
                         {
-                            model: detalleDevolucion_1.DetalleDevolucion,
+                            model: DetalleDevolucion,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo',
                                     attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial', 'imei', 'descripcion']
                                 }
@@ -456,14 +445,13 @@ const obtenerActaDevolucionPorToken = (req, res) => __awaiter(void 0, void 0, vo
         res.status(500).json({ msg: 'Error al obtener los datos del acta' });
     }
 });
-exports.obtenerActaDevolucionPorToken = obtenerActaDevolucionPorToken;
 /**
  * Firmar acta de devolución con token (PÚBLICO)
  * El EMPLEADO que devuelve firma desde el correo
  */
-const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const transaction = yield connection_1.default.transaction();
+    const transaction = yield sequelize.transaction();
     try {
         const { token } = req.params;
         const { firma } = req.body;
@@ -471,19 +459,19 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
             res.status(400).json({ msg: 'La firma es requerida' });
             return;
         }
-        const tokenFirma = yield tokenDevolucion_1.TokenDevolucion.findOne({
+        const tokenFirma = yield TokenDevolucion.findOne({
             where: { token, estado: 'pendiente' },
             include: [
                 {
-                    model: actaDevolucion_1.ActaDevolucion,
+                    model: ActaDevolucion,
                     as: 'actaDevolucion',
                     include: [
                         {
-                            model: detalleDevolucion_1.DetalleDevolucion,
+                            model: DetalleDevolucion,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo'
                                 }
                             ]
@@ -523,12 +511,12 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
             else if (detalle.estadoDevolucion === 'perdido') {
                 nuevoEstado = 'perdido';
             }
-            yield dispositivo_1.Dispositivo.update({
+            yield Dispositivo.update({
                 estado: nuevoEstado,
                 condicion: detalle.condicionDevolucion
             }, { where: { id: detalle.dispositivoId }, transaction });
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: detalle.dispositivoId,
                 tipoMovimiento: 'devolucion',
                 estadoAnterior: 'reservado',
@@ -541,7 +529,7 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
         yield transaction.commit();
         console.log('   ✅ Acta de devolución firmada exitosamente');
         // Emitir evento WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         const dispositivosIds = acta.detalles.map((d) => d.dispositivoId);
         io.to('devoluciones').emit('devolucion:signed', { actaId: acta.id, estado: 'completada' });
         io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
@@ -560,7 +548,7 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
         if (acta.correoEntrega) {
             destinatarios.push(acta.correoEntrega);
         }
-        (0, email_1.enviarConfirmacionDevolucion)(destinatarios, acta.nombreEntrega, dispositivos, new Date()).catch(err => console.error('Error enviando confirmación:', err));
+        enviarConfirmacionDevolucion(destinatarios, acta.nombreEntrega, dispositivos, new Date()).catch(err => console.error('Error enviando confirmación:', err));
         res.json({
             msg: 'Acta de devolución firmada correctamente',
             numeroActa: acta.numeroActa
@@ -572,12 +560,11 @@ const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, voi
         res.status(500).json({ msg: 'Error al procesar la firma' });
     }
 });
-exports.firmarActaDevolucionConToken = firmarActaDevolucionConToken;
 /**
  * Rechazar acta de devolución con token (PÚBLICO)
  */
-const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const transaction = yield connection_1.default.transaction();
+export const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transaction = yield sequelize.transaction();
     try {
         const { token } = req.params;
         const { motivo } = req.body;
@@ -585,15 +572,15 @@ const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, v
             res.status(400).json({ msg: 'Debe indicar el motivo del rechazo' });
             return;
         }
-        const tokenFirma = yield tokenDevolucion_1.TokenDevolucion.findOne({
+        const tokenFirma = yield TokenDevolucion.findOne({
             where: { token, estado: 'pendiente' },
             include: [
                 {
-                    model: actaDevolucion_1.ActaDevolucion,
+                    model: ActaDevolucion,
                     as: 'actaDevolucion',
                     include: [
                         {
-                            model: detalleDevolucion_1.DetalleDevolucion,
+                            model: DetalleDevolucion,
                             as: 'detalles'
                         }
                     ]
@@ -618,9 +605,9 @@ const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, v
         }, { transaction });
         // Revertir estado de dispositivos a "entregado"
         for (const detalle of acta.detalles || []) {
-            yield dispositivo_1.Dispositivo.update({ estado: 'entregado' }, { where: { id: detalle.dispositivoId }, transaction });
+            yield Dispositivo.update({ estado: 'entregado' }, { where: { id: detalle.dispositivoId }, transaction });
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: detalle.dispositivoId,
                 tipoMovimiento: 'cambio_estado',
                 estadoAnterior: 'reservado',
@@ -631,7 +618,7 @@ const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, v
         }
         yield transaction.commit();
         // Emitir evento WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         const dispositivosIds = (acta.detalles || []).map((d) => d.dispositivoId);
         io.to('devoluciones').emit('devolucion:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
         io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
@@ -646,30 +633,29 @@ const rechazarActaDevolucionConToken = (req, res) => __awaiter(void 0, void 0, v
         res.status(500).json({ msg: 'Error al procesar el rechazo' });
     }
 });
-exports.rechazarActaDevolucionConToken = rechazarActaDevolucionConToken;
 /**
  * Reenviar correo de firma para acta de devolución
  */
-const reenviarCorreoDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const reenviarCorreoDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const { id } = req.params;
-        const tokenFirma = yield tokenDevolucion_1.TokenDevolucion.findOne({
+        const tokenFirma = yield TokenDevolucion.findOne({
             where: {
                 actaDevolucionId: Number(id),
                 estado: 'pendiente'
             },
             include: [
                 {
-                    model: actaDevolucion_1.ActaDevolucion,
+                    model: ActaDevolucion,
                     as: 'actaDevolucion',
                     include: [
                         {
-                            model: detalleDevolucion_1.DetalleDevolucion,
+                            model: DetalleDevolucion,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo'
                                 }
                             ]
@@ -693,7 +679,7 @@ const reenviarCorreoDevolucion = (req, res) => __awaiter(void 0, void 0, void 0,
                 imei: ((_e = d.dispositivo) === null || _e === void 0 ? void 0 : _e.imei) || 'N/A'
             });
         })) || [];
-        yield (0, email_1.enviarCorreoDevolucion)(acta.correoReceptor, acta.nombreReceptor, tokenFirma.token, dispositivos, acta.observaciones);
+        yield enviarCorreoDevolucion(acta.correoReceptor, acta.nombreReceptor, tokenFirma.token, dispositivos, acta.observaciones);
         // Actualizar fecha de envío
         yield tokenFirma.update({ fechaEnvio: new Date() });
         res.json({
@@ -706,4 +692,3 @@ const reenviarCorreoDevolucion = (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).json({ msg: error.message || 'Error al reenviar el correo' });
     }
 });
-exports.reenviarCorreoDevolucion = reenviarCorreoDevolucion;

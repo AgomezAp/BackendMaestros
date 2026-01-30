@@ -3,7 +3,7 @@ import {
   Model,
 } from 'sequelize';
 
-import sequelize from '../database/connection';
+import sequelize from '../database/connection.js';
 
 export class MovimientoMaestro extends Model {
   public MMid!: number;

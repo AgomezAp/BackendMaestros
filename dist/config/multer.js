@@ -1,32 +1,30 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePhoto = exports.getPhotoUrl = exports.upload = void 0;
-const multer_1 = __importDefault(require("multer"));
-const path_1 = __importDefault(require("path"));
-const fs_1 = __importDefault(require("fs"));
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+// Obtener __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Crear directorio de uploads si no existe
-const uploadDir = path_1.default.join(__dirname, '../../uploads');
-if (!fs_1.default.existsSync(uploadDir)) {
-    fs_1.default.mkdirSync(uploadDir, { recursive: true });
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
 }
 // Configuración de almacenamiento
-const storage = multer_1.default.diskStorage({
+const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         // Crear subdirectorios por tipo de upload
         const tipo = req.body.tipoUpload || 'general';
-        const dir = path_1.default.join(uploadDir, tipo);
-        if (!fs_1.default.existsSync(dir)) {
-            fs_1.default.mkdirSync(dir, { recursive: true });
+        const dir = path.join(uploadDir, tipo);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
         }
         cb(null, dir);
     },
     filename: (req, file, cb) => {
         // Nombre único: timestamp-originalname
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path_1.default.extname(file.originalname);
+        const ext = path.extname(file.originalname);
         cb(null, uniqueSuffix + ext);
     }
 });
@@ -41,7 +39,7 @@ const fileFilter = (req, file, cb) => {
     }
 };
 // Configuración de Multer
-exports.upload = (0, multer_1.default)({
+export const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
@@ -50,15 +48,13 @@ exports.upload = (0, multer_1.default)({
     }
 });
 // Función helper para obtener URL de foto
-const getPhotoUrl = (filename, tipo = 'general') => {
+export const getPhotoUrl = (filename, tipo = 'general') => {
     return `/uploads/${tipo}/${filename}`;
 };
-exports.getPhotoUrl = getPhotoUrl;
 // Función helper para eliminar foto
-const deletePhoto = (filepath) => {
-    const fullPath = path_1.default.join(__dirname, '../..', filepath);
-    if (fs_1.default.existsSync(fullPath)) {
-        fs_1.default.unlinkSync(fullPath);
+export const deletePhoto = (filepath) => {
+    const fullPath = path.join(__dirname, '../..', filepath);
+    if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
     }
 };
-exports.deletePhoto = deletePhoto;

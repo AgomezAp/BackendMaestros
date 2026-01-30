@@ -1,23 +1,18 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const multer_1 = require("../config/multer");
-const dispositivo_1 = require("../controllers/dispositivo");
-const validateToken_1 = __importDefault(require("./validateToken"));
-const router = (0, express_1.Router)();
+import { Router } from 'express';
+import { upload } from '../config/multer.js';
+import { obtenerDispositivos, obtenerDisponibles, obtenerDispositivoPorId, registrarDispositivo, actualizarDispositivo, cambiarEstadoDispositivo, obtenerEstadisticas, obtenerTrazabilidad, darDeBajaDispositivo } from '../controllers/dispositivo.js';
+import validateToken from './validateToken.js';
+const router = Router();
 // Rutas específicas primero (antes de las rutas con parámetros dinámicos)
-router.get('/disponibles', validateToken_1.default, dispositivo_1.obtenerDisponibles);
-router.get('/estadisticas', validateToken_1.default, dispositivo_1.obtenerEstadisticas);
+router.get('/disponibles', validateToken, obtenerDisponibles);
+router.get('/estadisticas', validateToken, obtenerEstadisticas);
 // Rutas con parámetros dinámicos
-router.get('/', validateToken_1.default, dispositivo_1.obtenerDispositivos);
-router.get('/:id/trazabilidad', validateToken_1.default, dispositivo_1.obtenerTrazabilidad);
-router.get('/:id', validateToken_1.default, dispositivo_1.obtenerDispositivoPorId);
+router.get('/', validateToken, obtenerDispositivos);
+router.get('/:id/trazabilidad', validateToken, obtenerTrazabilidad);
+router.get('/:id', validateToken, obtenerDispositivoPorId);
 // Rutas de escritura
-router.post('/', validateToken_1.default, multer_1.upload.array('fotos', 10), dispositivo_1.registrarDispositivo);
-router.put('/:id', validateToken_1.default, dispositivo_1.actualizarDispositivo);
-router.patch('/:id/estado', validateToken_1.default, dispositivo_1.cambiarEstadoDispositivo);
-router.patch('/:id/baja', validateToken_1.default, dispositivo_1.darDeBajaDispositivo);
-exports.default = router;
+router.post('/', validateToken, upload.array('fotos', 10), registrarDispositivo);
+router.put('/:id', validateToken, actualizarDispositivo);
+router.patch('/:id/estado', validateToken, cambiarEstadoDispositivo);
+router.patch('/:id/baja', validateToken, darDeBajaDispositivo);
+export default router;

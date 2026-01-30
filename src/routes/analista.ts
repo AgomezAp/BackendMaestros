@@ -9,8 +9,8 @@ import {
   obtenerAnalistaPorId,
   reactivarAnalista,
   registrarAnalista,
-} from '../controllers/analista';
-import validateToken from './validateToken';
+} from '../controllers/analista.js';
+import validateToken from './validateToken.js';
 
 const router = Router();
 

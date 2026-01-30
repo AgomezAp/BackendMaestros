@@ -1,28 +1,21 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.MovimientoDispositivo = void 0;
-const sequelize_1 = require("sequelize");
-const connection_1 = __importDefault(require("../database/connection"));
-const dispositivo_1 = require("./dispositivo");
-const user_1 = require("./user");
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../database/connection.js';
+import { Dispositivo } from './dispositivo.js';
+import { User } from './user.js';
 /**
  * Modelo MovimientoDispositivo - Historial/Trazabilidad completa
  * Registra todos los movimientos de cada dispositivo
  */
-class MovimientoDispositivo extends sequelize_1.Model {
+export class MovimientoDispositivo extends Model {
 }
-exports.MovimientoDispositivo = MovimientoDispositivo;
 MovimientoDispositivo.init({
     id: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
     dispositivoId: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         references: {
             model: 'dispositivos',
@@ -31,48 +24,48 @@ MovimientoDispositivo.init({
         comment: 'ID del dispositivo'
     },
     tipoMovimiento: {
-        type: sequelize_1.DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega'),
+        type: DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega'),
         allowNull: false,
         comment: 'Tipo de movimiento realizado'
     },
     estadoAnterior: {
-        type: sequelize_1.DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: true,
         comment: 'Estado antes del movimiento'
     },
     estadoNuevo: {
-        type: sequelize_1.DataTypes.STRING,
+        type: DataTypes.STRING,
         allowNull: true,
         comment: 'Estado después del movimiento'
     },
     descripcion: {
-        type: sequelize_1.DataTypes.TEXT,
+        type: DataTypes.TEXT,
         allowNull: false,
         comment: 'Descripción detallada del movimiento'
     },
     actaId: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: true,
         comment: 'ID del acta relacionada (si aplica)'
     },
     fecha: {
-        type: sequelize_1.DataTypes.DATE,
-        defaultValue: sequelize_1.DataTypes.NOW,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
         comment: 'Fecha y hora del movimiento'
     },
     Uid: {
-        type: sequelize_1.DataTypes.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: true,
         comment: 'Usuario que realizó el movimiento'
     }
 }, {
-    sequelize: connection_1.default,
+    sequelize,
     modelName: 'MovimientoDispositivo',
     tableName: 'movimientos_dispositivo',
     timestamps: false,
 });
 // Relaciones
-dispositivo_1.Dispositivo.hasMany(MovimientoDispositivo, { foreignKey: 'dispositivoId', as: 'movimientos' });
-MovimientoDispositivo.belongsTo(dispositivo_1.Dispositivo, { foreignKey: 'dispositivoId', as: 'dispositivo' });
-user_1.User.hasMany(MovimientoDispositivo, { foreignKey: 'Uid', as: 'movimientosRealizados' });
-MovimientoDispositivo.belongsTo(user_1.User, { foreignKey: 'Uid', as: 'usuario' });
+Dispositivo.hasMany(MovimientoDispositivo, { foreignKey: 'dispositivoId', as: 'movimientos' });
+MovimientoDispositivo.belongsTo(Dispositivo, { foreignKey: 'dispositivoId', as: 'dispositivo' });
+User.hasMany(MovimientoDispositivo, { foreignKey: 'Uid', as: 'movimientosRealizados' });
+MovimientoDispositivo.belongsTo(User, { foreignKey: 'Uid', as: 'usuario' });

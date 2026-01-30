@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,53 +7,51 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIO = void 0;
-const cors_1 = __importDefault(require("cors"));
-const dotenv_1 = __importDefault(require("dotenv"));
-const express_1 = __importDefault(require("express"));
-const helmet_1 = __importDefault(require("helmet"));
-const path_1 = __importDefault(require("path"));
-const http_1 = __importDefault(require("http"));
-const socket_io_1 = require("socket.io");
-const connection_1 = __importDefault(require("../database/connection"));
-const maestros_1 = __importDefault(require("../routes/maestros"));
-const user_1 = __importDefault(require("../routes/user"));
-const analista_1 = __importDefault(require("../routes/analista"));
-const dispositivo_1 = __importDefault(require("../routes/dispositivo"));
-const actaEntrega_1 = __importDefault(require("../routes/actaEntrega"));
-const firmaExterna_1 = __importDefault(require("../routes/firmaExterna"));
-const actaDevolucion_1 = __importDefault(require("../routes/actaDevolucion"));
-const maestroBorrado_1 = require("./maestroBorrado");
-const maestros_2 = require("./maestros");
-const movimientoMaestro_1 = require("./movimientoMaestro");
-const user_2 = require("./user");
-const analista_2 = require("./analista");
-const dispositivo_2 = require("./dispositivo");
-const actaEntrega_2 = require("./actaEntrega");
-const detalleActa_1 = require("./detalleActa");
-const movimientoDispositivo_1 = require("./movimientoDispositivo");
-const tokenFirma_1 = require("./tokenFirma");
-const actaDevolucion_2 = require("./actaDevolucion");
-const detalleDevolucion_1 = require("./detalleDevolucion");
-const tokenDevolucion_1 = require("./tokenDevolucion");
-dotenv_1.default.config();
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import helmet from 'helmet';
+import path from 'path';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import { fileURLToPath } from 'url';
+// Obtener __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import sequelize from '../database/connection.js';
+import RMaestros from '../routes/maestros.js';
+import RUser from '../routes/user.js';
+import RAnalista from '../routes/analista.js';
+import RDispositivo from '../routes/dispositivo.js';
+import RActaEntrega from '../routes/actaEntrega.js';
+import RFirmaExterna from '../routes/firmaExterna.js';
+import RActaDevolucion from '../routes/actaDevolucion.js';
+import { maestroBorrado } from './maestroBorrado.js';
+import { Maestro } from './maestros.js';
+import { MovimientoMaestro } from './movimientoMaestro.js';
+import { User } from './user.js';
+import { Analista } from './analista.js';
+import { Dispositivo } from './dispositivo.js';
+import { ActaEntrega } from './actaEntrega.js';
+import { DetalleActa } from './detalleActa.js';
+import { MovimientoDispositivo } from './movimientoDispositivo.js';
+import { TokenFirma } from './tokenFirma.js';
+import { ActaDevolucion } from './actaDevolucion.js';
+import { DetalleDevolucion } from './detalleDevolucion.js';
+import { TokenDevolucion } from './tokenDevolucion.js';
+dotenv.config();
 // Variable global para el socket
 let io;
 // Función para obtener la instancia de Socket.IO
-const getIO = () => io;
-exports.getIO = getIO;
+export const getIO = () => io;
 class Server {
     constructor() {
-        this.app = (0, express_1.default)();
+        this.app = express();
         this.port = process.env.PORT;
         // Crear servidor HTTP
-        this.httpServer = http_1.default.createServer(this.app);
+        this.httpServer = http.createServer(this.app);
         // Configurar Socket.IO
-        this.io = new socket_io_1.Server(this.httpServer, {
+        this.io = new SocketIOServer(this.httpServer, {
             cors: {
                 origin: "*",
                 methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
@@ -93,19 +90,19 @@ class Server {
         });
     }
     middlewares() {
-        this.app.use(express_1.default.json());
+        this.app.use(express.json());
         // Configurar helmet para permitir imágenes
-        this.app.use((0, helmet_1.default)({
+        this.app.use(helmet({
             crossOriginResourcePolicy: { policy: "cross-origin" },
             crossOriginEmbedderPolicy: false,
         }));
-        this.app.use((0, cors_1.default)({
+        this.app.use(cors({
             origin: "*", // Permite todas las solicitudes de origen cruzado
             methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Métodos permitidos
             allowedHeaders: ["Content-Type", "Authorization"],
         }));
         // Servir archivos estáticos de uploads
-        this.app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../../uploads')));
+        this.app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
         this.app.use((req, res, next) => {
             res.setTimeout(60000, () => {
                 // 2 minutos
@@ -136,37 +133,37 @@ class Server {
          }); */
     }
     routes() {
-        this.app.use(user_1.default);
-        this.app.use(maestros_1.default);
-        this.app.use(analista_1.default);
-        this.app.use('/api/dispositivos', dispositivo_1.default);
-        this.app.use('/api/actas', actaEntrega_1.default);
-        this.app.use('/api/firma', firmaExterna_1.default);
-        this.app.use('/api/actas-devolucion', actaDevolucion_1.default);
+        this.app.use(RUser);
+        this.app.use(RMaestros);
+        this.app.use(RAnalista);
+        this.app.use('/api/dispositivos', RDispositivo);
+        this.app.use('/api/actas', RActaEntrega);
+        this.app.use('/api/firma', RFirmaExterna);
+        this.app.use('/api/actas-devolucion', RActaDevolucion);
     }
     DbConnection() {
         return __awaiter(this, void 0, void 0, function* () {
             // Conexión a la base de datos
             try {
                 /* {force: true}{alter: true} */
-                yield connection_1.default.authenticate();
+                yield sequelize.authenticate();
                 // Migración: Cambiar 'prestado' a 'entregado' en el ENUM de estado
                 yield this.migrateEstadoEnum();
-                yield user_2.User.sync();
-                yield analista_2.Analista.sync();
-                yield maestros_2.Maestro.sync();
-                yield movimientoMaestro_1.MovimientoMaestro.sync();
-                yield maestroBorrado_1.maestroBorrado.sync();
+                yield User.sync();
+                yield Analista.sync();
+                yield Maestro.sync();
+                yield MovimientoMaestro.sync();
+                yield maestroBorrado.sync();
                 // Nuevos modelos de inventario
-                yield dispositivo_2.Dispositivo.sync();
-                yield actaEntrega_2.ActaEntrega.sync();
-                yield detalleActa_1.DetalleActa.sync();
-                yield movimientoDispositivo_1.MovimientoDispositivo.sync();
-                yield tokenFirma_1.TokenFirma.sync();
+                yield Dispositivo.sync();
+                yield ActaEntrega.sync();
+                yield DetalleActa.sync();
+                yield MovimientoDispositivo.sync();
+                yield TokenFirma.sync();
                 // Modelos de devolución
-                yield actaDevolucion_2.ActaDevolucion.sync();
-                yield detalleDevolucion_1.DetalleDevolucion.sync();
-                yield tokenDevolucion_1.TokenDevolucion.sync();
+                yield ActaDevolucion.sync();
+                yield DetalleDevolucion.sync();
+                yield TokenDevolucion.sync();
                 console.log("Conexión a la base de datos exitosa");
             }
             catch (error) {
@@ -183,7 +180,7 @@ class Server {
             var _a;
             try {
                 // Verificar si existe el valor 'prestado' y no existe 'entregado'
-                const [results] = yield connection_1.default.query(`
+                const [results] = yield sequelize.query(`
         SELECT enumlabel 
         FROM pg_enum 
         WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_dispositivos_estado')
@@ -192,11 +189,11 @@ class Server {
                 if (labels.includes('prestado') && !labels.includes('entregado')) {
                     console.log('Migrando estado: prestado -> entregado...');
                     // Actualizar los registros que tienen 'prestado'
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           UPDATE dispositivos SET estado = 'disponible' WHERE estado = 'prestado';
         `);
                     // Renombrar el valor del ENUM
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_dispositivos_estado" RENAME VALUE 'prestado' TO 'entregado';
         `);
                     console.log('Migración de estado completada');
@@ -204,13 +201,13 @@ class Server {
                 // Agregar 'reservado' si no existe
                 if (!labels.includes('reservado')) {
                     console.log('Agregando estado: reservado...');
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_dispositivos_estado" ADD VALUE IF NOT EXISTS 'reservado';
         `);
                     console.log('Estado reservado agregado');
                 }
                 // Verificar y agregar nuevos estados de acta si es necesario
-                const [actaResults] = yield connection_1.default.query(`
+                const [actaResults] = yield sequelize.query(`
         SELECT enumlabel 
         FROM pg_enum 
         WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_actas_entrega_estado')
@@ -218,16 +215,16 @@ class Server {
                 const actaLabels = actaResults.map(r => r.enumlabel);
                 if (!actaLabels.includes('pendiente_firma')) {
                     console.log('Agregando estados de acta: pendiente_firma, rechazada...');
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'pendiente_firma';
         `);
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'rechazada';
         `);
                     console.log('Estados de acta agregados');
                 }
                 // Verificar y agregar nuevos tipos de movimiento
-                const [movResults] = yield connection_1.default.query(`
+                const [movResults] = yield sequelize.query(`
         SELECT enumlabel 
         FROM pg_enum 
         WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_movimientos_dispositivo_tipoMovimiento')
@@ -235,10 +232,10 @@ class Server {
                 const movLabels = movResults.map(r => r.enumlabel);
                 if (!movLabels.includes('reserva')) {
                     console.log('Agregando tipos de movimiento: reserva, firma_entrega...');
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'reserva';
         `);
-                    yield connection_1.default.query(`
+                    yield sequelize.query(`
           ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'firma_entrega';
         `);
                     console.log('Tipos de movimiento agregados');
@@ -253,4 +250,4 @@ class Server {
         });
     }
 }
-exports.default = Server;
+export default Server;

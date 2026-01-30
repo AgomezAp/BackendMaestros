@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
-import sequelize from '../database/connection';
-import { TokenFirma } from '../models/tokenFirma';
-import { ActaEntrega } from '../models/actaEntrega';
-import { DetalleActa } from '../models/detalleActa';
-import { Dispositivo } from '../models/dispositivo';
-import { MovimientoDispositivo } from '../models/movimientoDispositivo';
-import { enviarCorreoFirma, enviarActaFirmada, enviarNotificacionRechazo } from '../config/email';
-import { getIO } from '../models/server';
+import sequelize from '../database/connection.js';
+import { TokenFirma } from '../models/tokenFirma.js';
+import { ActaEntrega } from '../models/actaEntrega.js';
+import { DetalleActa } from '../models/detalleActa.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { enviarCorreoFirma, enviarActaFirmada, enviarNotificacionRechazo } from '../config/email.js';
+import { getIO } from '../models/server.js';
 
 /**
  * Enviar correo de solicitud de firma para un acta

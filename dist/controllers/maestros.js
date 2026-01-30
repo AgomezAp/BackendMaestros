@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,18 +7,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.obtenerTodosLosMaestros = exports.reactivarMaestro = exports.generarReporteMensual = exports.generarReporte = exports.maestrosActivos = exports.actualizarMaestro = exports.borrarMaestrosPorId = exports.ObtenerMaestrPorId = exports.ObtenerMaestros = exports.registrarMaestro = void 0;
-const sequelize_1 = require("sequelize");
-const maestroBorrado_1 = require("../models/maestroBorrado");
-const maestros_1 = require("../models/maestros");
-const movimientoMaestro_1 = require("../models/movimientoMaestro");
-const user_1 = require("../models/user");
-const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+import { Op } from 'sequelize';
+import { maestroBorrado } from '../models/maestroBorrado.js';
+import { Maestro } from '../models/maestros.js';
+import { MovimientoMaestro } from '../models/movimientoMaestro.js';
+import { User } from '../models/user.js';
+export const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, analistaAsignado, Aid, firmaEntrega, descripcionEntrega, fotosEntrega, estado, almacen, marca, modelo, imei, stockMinimo, fechaIngreso, Uid, } = req.body;
     try {
         // Crear el nuevo celular en inventario
-        const maestro = yield maestros_1.Maestro.create({
+        const maestro = yield Maestro.create({
             nombre,
             analistaAsignado,
             Aid,
@@ -35,7 +32,7 @@ const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
             fechaIngreso: fechaIngreso || new Date(),
             Uid,
         });
-        yield movimientoMaestro_1.MovimientoMaestro.create({
+        yield MovimientoMaestro.create({
             Mid: maestro.Mid,
             tipoMovimiento: "CREACION",
         });
@@ -52,18 +49,16 @@ const registrarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
 });
-exports.registrarMaestro = registrarMaestro;
-const ObtenerMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const listaMaestro = yield maestros_1.Maestro.findAll();
+export const ObtenerMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const listaMaestro = yield Maestro.findAll();
     res.status(200).json({
         maestros: listaMaestro,
     });
 });
-exports.ObtenerMaestros = ObtenerMaestros;
-const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
+        const maestro = yield Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,
@@ -82,19 +77,18 @@ const ObtenerMaestrPorId = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 });
-exports.ObtenerMaestrPorId = ObtenerMaestrPorId;
-const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
     const { firmaRecibe, descripcionRecibe, maestroRecibido, fechaEntrega, nombreCompletoRecibe } = req.body;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
+        const maestro = yield Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,
             });
         }
         // Crear registro en la tabla maestroBorrado con los datos modificados
-        yield maestroBorrado_1.maestroBorrado.create({
+        yield maestroBorrado.create({
             Mid: maestro.Mid,
             nombre: maestro.nombre,
             NombreMaestro: maestro.analistaAsignado,
@@ -115,12 +109,12 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
             deletedAt: new Date(),
         });
         // Crear registro en la tabla MovimientoMaestro
-        yield movimientoMaestro_1.MovimientoMaestro.create({
+        yield MovimientoMaestro.create({
             Mid: maestro.Mid,
             tipoMovimiento: "ELIMINACION",
         });
         // Eliminar el maestro de la tabla Maestro
-        yield maestros_1.Maestro.destroy({ where: { Mid } });
+        yield Maestro.destroy({ where: { Mid } });
         res.status(200).json({
             message: `Maestro con ID ${Mid} eliminado y datos actualizados`,
         });
@@ -133,18 +127,17 @@ const borrarMaestrosPorId = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
 });
-exports.borrarMaestrosPorId = borrarMaestrosPorId;
-const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
     const { nombre, analistaAsignado, Aid, firma, descripcion, almacen, estado, marca, modelo, stockMinimo } = req.body;
     try {
-        const maestro = yield maestros_1.Maestro.findByPk(Number(Mid));
+        const maestro = yield Maestro.findByPk(Number(Mid));
         if (!maestro) {
             return res.status(404).json({
                 message: `No existe el maestro con el id: ${Mid}`,
             });
         }
-        yield maestros_1.Maestro.update({
+        yield Maestro.update({
             nombre,
             analistaAsignado,
             Aid,
@@ -168,14 +161,13 @@ const actualizarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
 });
-exports.actualizarMaestro = actualizarMaestro;
-const maestrosActivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const maestrosActivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const maestros = yield maestros_1.Maestro.findAll({
+        const maestros = yield Maestro.findAll({
             where: { estado: "activo" },
             include: [
                 {
-                    model: user_1.User,
+                    model: User,
                     as: "usuarios",
                     attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
                 },
@@ -191,8 +183,7 @@ const maestrosActivos = (req, res) => __awaiter(void 0, void 0, void 0, function
         });
     }
 });
-exports.maestrosActivos = maestrosActivos;
-const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { fechaInicio, fechaFin } = req.body;
     // Validar que las fechas sean válidas
     if (!fechaInicio || !fechaFin) {
@@ -210,10 +201,10 @@ const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
     try {
-        const movimientos = yield movimientoMaestro_1.MovimientoMaestro.findAll({
+        const movimientos = yield MovimientoMaestro.findAll({
             where: {
                 fechaMovimiento: {
-                    [sequelize_1.Op.between]: [fechaInicioDate, fechaFinDate],
+                    [Op.between]: [fechaInicioDate, fechaFinDate],
                 },
             },
         });
@@ -230,18 +221,17 @@ const generarReporte = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
 });
-exports.generarReporte = generarReporte;
-const generarReporteMensual = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const generarReporteMensual = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const now = new Date();
         const mes = now.getMonth(); // Mes actual (0-11)
         const año = now.getFullYear(); // Año actual
         const fechaInicio = new Date(año, mes, 1);
         const fechaFin = new Date(año, mes + 1, 0);
-        const movimientos = yield movimientoMaestro_1.MovimientoMaestro.findAll({
+        const movimientos = yield MovimientoMaestro.findAll({
             where: {
                 fechaMovimiento: {
-                    [sequelize_1.Op.between]: [fechaInicio, fechaFin],
+                    [Op.between]: [fechaInicio, fechaFin],
                 },
             },
         });
@@ -258,19 +248,18 @@ const generarReporteMensual = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
     }
 });
-exports.generarReporteMensual = generarReporteMensual;
-const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Mid } = req.params;
     try {
         // Buscar el maestro en la tabla maestros_borrados
-        const maestroInactivo = yield maestroBorrado_1.maestroBorrado.findOne({ where: { Mid } });
+        const maestroInactivo = yield maestroBorrado.findOne({ where: { Mid } });
         if (!maestroInactivo) {
             return res.status(404).json({
                 error: "Maestro no encontrado en la tabla de maestros inactivos",
             });
         }
         // Mover el maestro a la tabla maestros
-        const maestroActivo = yield maestros_1.Maestro.create({
+        const maestroActivo = yield Maestro.create({
             Mid: maestroInactivo.Mid,
             nombre: maestroInactivo.nombre,
             analistaAsignado: maestroInactivo.NombreMaestro,
@@ -288,7 +277,7 @@ const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
             fechaSalida: maestroInactivo.fechaEntrega,
         });
         // Eliminar el maestro de la tabla maestros_borrados
-        yield maestroBorrado_1.maestroBorrado.destroy({ where: { Mid } });
+        yield maestroBorrado.destroy({ where: { Mid } });
         res.status(200).json({
             message: "Maestro reactivado exitosamente",
             maestro: maestroActivo,
@@ -302,24 +291,23 @@ const reactivarMaestro = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
 });
-exports.reactivarMaestro = reactivarMaestro;
-const obtenerTodosLosMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerTodosLosMaestros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // Obtener maestros activos
-        const maestrosActivos = yield maestros_1.Maestro.findAll({
+        const maestrosActivos = yield Maestro.findAll({
             include: [
                 {
-                    model: user_1.User,
+                    model: User,
                     as: "usuarios",
                     attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
                 },
             ],
         });
         // Obtener maestros inactivos
-        const maestrosInactivos = yield maestroBorrado_1.maestroBorrado.findAll({
+        const maestrosInactivos = yield maestroBorrado.findAll({
             include: [
                 {
-                    model: user_1.User,
+                    model: User,
                     as: "usuarios",
                     attributes: ["nombre", "apellido"], // Ajusta los atributos según tus necesidades
                 },
@@ -340,4 +328,3 @@ const obtenerTodosLosMaestros = (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
 });
-exports.obtenerTodosLosMaestros = obtenerTodosLosMaestros;

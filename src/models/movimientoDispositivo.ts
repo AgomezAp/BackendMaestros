@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { Dispositivo } from './dispositivo';
-import { User } from './user';
+import sequelize from '../database/connection.js';
+import { Dispositivo } from './dispositivo.js';
+import { User } from './user.js';
 
 /**
  * Modelo MovimientoDispositivo - Historial/Trazabilidad completa

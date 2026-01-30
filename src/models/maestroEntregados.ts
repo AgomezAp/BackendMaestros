@@ -3,8 +3,8 @@ import {
   Model,
 } from 'sequelize';
 
-import sequelize from '../database/connection';
-import { User } from './user';
+import sequelize from '../database/connection.js';
+import { User } from './user.js';
 
 export class MaestroEntregado extends Model {
   public Mid!: number;

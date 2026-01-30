@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { User } from './user';
+import sequelize from '../database/connection.js';
+import { User } from './user.js';
 
 /**
  * Modelo Dispositivo - Inventario principal de equipos

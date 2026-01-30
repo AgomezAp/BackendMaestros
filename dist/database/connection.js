@@ -1,11 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv_1 = __importDefault(require("dotenv"));
-const sequelize_1 = require("sequelize");
-dotenv_1.default.config();
+import dotenv from 'dotenv';
+import { Sequelize } from 'sequelize';
+dotenv.config();
 /**
  * URL de la base de datos obtenida de las variables de entorno.
  *
@@ -15,7 +10,7 @@ const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
     throw new Error('DATABASE_URL is not defined in the environment variables');
 }
-const sequelize = new sequelize_1.Sequelize(databaseUrl, {
+const sequelize = new Sequelize(databaseUrl, {
     dialect: 'postgres',
     protocol: 'postgres',
     dialectOptions: {
@@ -32,4 +27,4 @@ sequelize.authenticate()
     .catch((error) => {
     console.error('Unable to connect to the database:', error);
 });
-exports.default = sequelize;
+export default sequelize;

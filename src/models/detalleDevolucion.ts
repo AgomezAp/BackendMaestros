@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { ActaDevolucion } from './actaDevolucion';
-import { Dispositivo } from './dispositivo';
+import sequelize from '../database/connection.js';
+import { ActaDevolucion } from './actaDevolucion.js';
+import { Dispositivo } from './dispositivo.js';
 
 /**
  * Modelo DetalleDevolucion - Detalle de dispositivos en acta de devolución

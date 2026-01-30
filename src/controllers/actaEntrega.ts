@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import sequelize from '../database/connection';
-import { ActaEntrega } from '../models/actaEntrega';
-import { DetalleActa } from '../models/detalleActa';
-import { Dispositivo } from '../models/dispositivo';
-import { MovimientoDispositivo } from '../models/movimientoDispositivo';
-import { getPhotoUrl } from '../config/multer';
-import { getIO } from '../models/server';
-
+import sequelize from '../database/connection.js';
+import { ActaEntrega } from '../models/actaEntrega.js';
+import { DetalleActa } from '../models/detalleActa.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { getPhotoUrl } from '../config/multer.js';
+import { getIO } from '../models/server.js';
+ 
 /**
  * Generar número de acta único
  */

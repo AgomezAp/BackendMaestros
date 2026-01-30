@@ -5,28 +5,33 @@ import helmet from 'helmet';
 import path from 'path';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { fileURLToPath } from 'url';
 
-import sequelize from '../database/connection';
-import RMaestros from '../routes/maestros';
-import RUser from '../routes/user';
-import RAnalista from '../routes/analista';
-import RDispositivo from '../routes/dispositivo';
-import RActaEntrega from '../routes/actaEntrega';
-import RFirmaExterna from '../routes/firmaExterna';
-import RActaDevolucion from '../routes/actaDevolucion';
-import { maestroBorrado } from './maestroBorrado';
-import { Maestro } from './maestros';
-import { MovimientoMaestro } from './movimientoMaestro';
-import { User } from './user';
-import { Analista } from './analista';
-import { Dispositivo } from './dispositivo';
-import { ActaEntrega } from './actaEntrega';
-import { DetalleActa } from './detalleActa';
-import { MovimientoDispositivo } from './movimientoDispositivo';
-import { TokenFirma } from './tokenFirma';
-import { ActaDevolucion } from './actaDevolucion';
-import { DetalleDevolucion } from './detalleDevolucion';
-import { TokenDevolucion } from './tokenDevolucion';
+// Obtener __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import sequelize from '../database/connection.js';
+import RMaestros from '../routes/maestros.js';
+import RUser from '../routes/user.js';
+import RAnalista from '../routes/analista.js';
+import RDispositivo from '../routes/dispositivo.js';
+import RActaEntrega from '../routes/actaEntrega.js';
+import RFirmaExterna from '../routes/firmaExterna.js';
+import RActaDevolucion from '../routes/actaDevolucion.js';
+import { maestroBorrado } from './maestroBorrado.js';
+import { Maestro } from './maestros.js';
+import { MovimientoMaestro } from './movimientoMaestro.js';
+import { User } from './user.js';
+import { Analista } from './analista.js';
+import { Dispositivo } from './dispositivo.js';
+import { ActaEntrega } from './actaEntrega.js';
+import { DetalleActa } from './detalleActa.js';
+import { MovimientoDispositivo } from './movimientoDispositivo.js';
+import { TokenFirma } from './tokenFirma.js';
+import { ActaDevolucion } from './actaDevolucion.js';
+import { DetalleDevolucion } from './detalleDevolucion.js';
+import { TokenDevolucion } from './tokenDevolucion.js';
 
 dotenv.config();
 

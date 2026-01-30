@@ -4,11 +4,11 @@ import {
 } from 'express';
 import { Op } from 'sequelize';
 
-import { maestroBorrado } from '../models/maestroBorrado';
-import { Maestro } from '../models/maestros';
-import { MovimientoMaestro } from '../models/movimientoMaestro';
-import { User } from '../models/user';
-import { Analista } from '../models/analista';
+import { maestroBorrado } from '../models/maestroBorrado.js';
+import { Maestro } from '../models/maestros.js';
+import { MovimientoMaestro } from '../models/movimientoMaestro.js';
+import { User } from '../models/user.js';
+import { Analista } from '../models/analista.js';
 
 export const registrarMaestro = async (
   req: Request,

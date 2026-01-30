@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { ActaDevolucion } from './actaDevolucion';
+import sequelize from '../database/connection.js';
+import { ActaDevolucion } from './actaDevolucion.js';
 
 /**
  * Modelo TokenDevolucion - Tokens para firma externa de devolución

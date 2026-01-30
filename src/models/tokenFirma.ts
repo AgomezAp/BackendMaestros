@@ -1,6 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { ActaEntrega } from './actaEntrega';
+import sequelize from '../database/connection.js';
+import { ActaEntrega } from './actaEntrega.js';
 
 /**
  * Modelo TokenFirma - Tokens para firma externa por correo

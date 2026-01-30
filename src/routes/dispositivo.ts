@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { upload } from '../config/multer';
+import { upload } from '../config/multer.js';
 import {
   obtenerDispositivos,
   obtenerDisponibles,
@@ -10,8 +10,8 @@ import {
   obtenerEstadisticas,
   obtenerTrazabilidad,
   darDeBajaDispositivo
-} from '../controllers/dispositivo';
-import validateToken from './validateToken';
+} from '../controllers/dispositivo.js';
+import validateToken from './validateToken.js';
 
 const router = Router();
 

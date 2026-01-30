@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,13 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.eliminarAnalista = exports.reactivarAnalista = exports.desactivarAnalista = exports.actualizarAnalista = exports.registrarAnalista = exports.obtenerAnalistaPorId = exports.obtenerAnalistasActivos = exports.obtenerAnalistas = void 0;
-const analista_1 = require("../models/analista");
+import { Analista } from '../models/analista.js';
 // Obtener todos los analistas
-const obtenerAnalistas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerAnalistas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const analistas = yield analista_1.Analista.findAll({
+        const analistas = yield Analista.findAll({
             order: [['nombre', 'ASC']],
         });
         res.status(200).json({
@@ -29,11 +26,10 @@ const obtenerAnalistas = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
 });
-exports.obtenerAnalistas = obtenerAnalistas;
 // Obtener analistas activos
-const obtenerAnalistasActivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerAnalistasActivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const analistas = yield analista_1.Analista.findAll({
+        const analistas = yield Analista.findAll({
             where: { activo: true },
             order: [['nombre', 'ASC']],
         });
@@ -49,12 +45,11 @@ const obtenerAnalistasActivos = (req, res) => __awaiter(void 0, void 0, void 0, 
         });
     }
 });
-exports.obtenerAnalistasActivos = obtenerAnalistasActivos;
 // Obtener analista por ID
-const obtenerAnalistaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerAnalistaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Number(Aid));
+        const analista = yield Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
@@ -73,19 +68,18 @@ const obtenerAnalistaPorId = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
 });
-exports.obtenerAnalistaPorId = obtenerAnalistaPorId;
 // Registrar nuevo analista
-const registrarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const registrarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, apellido, cedula, telefono, correo, cargo } = req.body;
     try {
         // Verificar si ya existe un analista con esa cédula
-        const analistaExistente = yield analista_1.Analista.findOne({ where: { cedula } });
+        const analistaExistente = yield Analista.findOne({ where: { cedula } });
         if (analistaExistente) {
             return res.status(400).json({
                 error: `Ya existe un analista con la cédula: ${cedula}`,
             });
         }
-        const analista = yield analista_1.Analista.create({
+        const analista = yield Analista.create({
             nombre,
             apellido,
             cedula,
@@ -107,19 +101,18 @@ const registrarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
 });
-exports.registrarAnalista = registrarAnalista;
 // Actualizar analista
-const actualizarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const actualizarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     const { nombre, apellido, cedula, telefono, correo, cargo, activo } = req.body;
     try {
-        const analista = yield analista_1.Analista.findByPk(Number(Aid));
+        const analista = yield Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
             });
         }
-        yield analista_1.Analista.update({
+        yield Analista.update({
             nombre,
             apellido,
             cedula,
@@ -140,18 +133,17 @@ const actualizarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 });
-exports.actualizarAnalista = actualizarAnalista;
 // Desactivar analista
-const desactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const desactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Number(Aid));
+        const analista = yield Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
             });
         }
-        yield analista_1.Analista.update({ activo: false }, { where: { Aid } });
+        yield Analista.update({ activo: false }, { where: { Aid } });
         res.status(200).json({
             message: `Analista con ID ${Aid} desactivado`,
         });
@@ -164,18 +156,17 @@ const desactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
     }
 });
-exports.desactivarAnalista = desactivarAnalista;
 // Reactivar analista
-const reactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const reactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Number(Aid));
+        const analista = yield Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
             });
         }
-        yield analista_1.Analista.update({ activo: true }, { where: { Aid } });
+        yield Analista.update({ activo: true }, { where: { Aid } });
         res.status(200).json({
             message: `Analista con ID ${Aid} reactivado`,
         });
@@ -188,25 +179,24 @@ const reactivarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, functi
         });
     }
 });
-exports.reactivarAnalista = reactivarAnalista;
 // Eliminar analista (solo si no tiene celulares asignados)
-const eliminarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const eliminarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Aid } = req.params;
     try {
-        const analista = yield analista_1.Analista.findByPk(Number(Aid));
+        const analista = yield Analista.findByPk(Number(Aid));
         if (!analista) {
             return res.status(404).json({
                 message: `No existe el analista con el id: ${Aid}`,
             });
         }
         // Verificar si tiene celulares asignados
-        const celularesAsignados = yield maestros_1.Maestro.count({ where: { Aid, estado: 'en_uso' } });
+        const celularesAsignados = yield Maestro.count({ where: { Aid, estado: 'en_uso' } });
         if (celularesAsignados > 0) {
             return res.status(400).json({
                 error: `No se puede eliminar el analista porque tiene ${celularesAsignados} celular(es) asignado(s)`,
             });
         }
-        yield analista_1.Analista.destroy({ where: { Aid } });
+        yield Analista.destroy({ where: { Aid } });
         res.status(200).json({
             message: `Analista con ID ${Aid} eliminado`,
         });
@@ -219,6 +209,5 @@ const eliminarAnalista = (req, res) => __awaiter(void 0, void 0, void 0, functio
         });
     }
 });
-exports.eliminarAnalista = eliminarAnalista;
 // Importar Maestro para la verificación
-const maestros_1 = require("../models/maestros");
+import { Maestro } from '../models/maestros.js';

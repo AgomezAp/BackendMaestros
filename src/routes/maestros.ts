@@ -10,8 +10,8 @@ import {
   obtenerTodosLosMaestros,
   reactivarMaestro,
   registrarMaestro,
-} from '../controllers/maestros';
-import validateToken from './validateToken';
+} from '../controllers/maestros.js';
+import validateToken from './validateToken.js';
 
 const router = Router();
 

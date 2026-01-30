@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,24 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.enviarCorreoFirma = enviarCorreoFirma;
-exports.enviarActaFirmada = enviarActaFirmada;
-exports.enviarNotificacionRechazo = enviarNotificacionRechazo;
-exports.enviarCorreoDevolucion = enviarCorreoDevolucion;
-exports.enviarConfirmacionDevolucion = enviarConfirmacionDevolucion;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const crypto_1 = __importDefault(require("crypto"));
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 // Verificar que las credenciales estén configuradas
 console.log('📧 Configurando servicio de correo...');
 console.log('   EMAIL_USER:', process.env.EMAIL_USER || '[NO CONFIGURADO]');
 console.log('   EMAIL_SERVICE:', process.env.EMAIL_SERVICE || 'gmail (default)');
 console.log('   EMAIL_PASS:', process.env.EMAIL_PASS ? '[CONFIGURADO]' : '[NO CONFIGURADO]');
 // Configuración del transportador de correo
-const transporter = nodemailer_1.default.createTransport({
+const transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
@@ -45,7 +35,7 @@ transporter.verify((error, success) => {
 /**
  * Envía correo de solicitud de firma
  */
-function enviarCorreoFirma(destinatario, nombreReceptor, token, dispositivos, comentarios) {
+export function enviarCorreoFirma(destinatario, nombreReceptor, token, dispositivos, comentarios) {
     return __awaiter(this, void 0, void 0, function* () {
         const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
         const enlaceFirma = `${frontendUrl}/firmar/${token}`;
@@ -129,18 +119,18 @@ function enviarCorreoFirma(destinatario, nombreReceptor, token, dispositivos, co
   `;
         // Generar IDs únicos para evitar que Gmail agrupe los correos en hilos
         const domain = process.env.EMAIL_SERVICE || 'gmail';
-        const messageId = `<${crypto_1.default.randomUUID()}@${domain}.com>`;
+        const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
         const mailOptions = {
             from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
             to: destinatario,
-            subject: `[${crypto_1.default.randomUUID().substring(0, 8)}] 📋 Acta de Entrega de Equipos - Requiere su firma`,
+            subject: `[${crypto.randomUUID().substring(0, 8)}] 📋 Acta de Entrega de Equipos - Requiere su firma`,
             html: htmlContent,
             headers: {
                 'Message-ID': messageId,
-                'X-Entity-Ref-ID': crypto_1.default.randomUUID(),
+                'X-Entity-Ref-ID': crypto.randomUUID(),
                 'Precedence': 'bulk',
                 'Auto-Submitted': 'auto-generated',
-                'X-Google-Thread-Id': crypto_1.default.randomUUID(),
+                'X-Google-Thread-Id': crypto.randomUUID(),
             },
         };
         console.log('📨 Intentando enviar correo de firma...');
@@ -163,7 +153,7 @@ function enviarCorreoFirma(destinatario, nombreReceptor, token, dispositivos, co
 /**
  * Envía copia del acta firmada
  */
-function enviarActaFirmada(destinatarios, nombreReceptor, dispositivos, fechaFirma, pdfBuffer) {
+export function enviarActaFirmada(destinatarios, nombreReceptor, dispositivos, fechaFirma, pdfBuffer) {
     return __awaiter(this, void 0, void 0, function* () {
         const listaDispositivos = dispositivos.map(d => `<tr>
       <td style="padding: 8px; border: 1px solid #ddd;">${d.tipo}</td>
@@ -226,18 +216,18 @@ function enviarActaFirmada(destinatarios, nombreReceptor, dispositivos, fechaFir
   `;
         // Generar IDs únicos para evitar que Gmail agrupe los correos en hilos
         const domain = process.env.EMAIL_SERVICE || 'gmail';
-        const messageId = `<${crypto_1.default.randomUUID()}@${domain}.com>`;
+        const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
         const mailOptions = {
             from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
             to: destinatarios.join(', '),
-            subject: `[${crypto_1.default.randomUUID().substring(0, 8)}] ✅ Acta Firmada - ${nombreReceptor} - ${fechaFirma.toLocaleDateString('es-MX')}`,
+            subject: `[${crypto.randomUUID().substring(0, 8)}] ✅ Acta Firmada - ${nombreReceptor} - ${fechaFirma.toLocaleDateString('es-MX')}`,
             html: htmlContent,
             headers: {
                 'Message-ID': messageId,
-                'X-Entity-Ref-ID': crypto_1.default.randomUUID(),
+                'X-Entity-Ref-ID': crypto.randomUUID(),
                 'Precedence': 'bulk',
                 'Auto-Submitted': 'auto-generated',
-                'X-Google-Thread-Id': crypto_1.default.randomUUID(),
+                'X-Google-Thread-Id': crypto.randomUUID(),
             },
         };
         // Si hay PDF adjunto
@@ -262,7 +252,7 @@ function enviarActaFirmada(destinatarios, nombreReceptor, dispositivos, fechaFir
 /**
  * Envía notificación de rechazo
  */
-function enviarNotificacionRechazo(destinatario, nombreReceptor, motivo) {
+export function enviarNotificacionRechazo(destinatario, nombreReceptor, motivo) {
     return __awaiter(this, void 0, void 0, function* () {
         const htmlContent = `
     <!DOCTYPE html>
@@ -302,18 +292,18 @@ function enviarNotificacionRechazo(destinatario, nombreReceptor, motivo) {
   `;
         // Generar IDs únicos para evitar que Gmail agrupe los correos en hilos
         const domain = process.env.EMAIL_SERVICE || 'gmail';
-        const messageId = `<${crypto_1.default.randomUUID()}@${domain}.com>`;
+        const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
         const mailOptions = {
             from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
             to: destinatario,
-            subject: `[${crypto_1.default.randomUUID().substring(0, 8)}] ⚠️ Acta Devuelta - ${nombreReceptor} solicita correcciones`,
+            subject: `[${crypto.randomUUID().substring(0, 8)}] ⚠️ Acta Devuelta - ${nombreReceptor} solicita correcciones`,
             html: htmlContent,
             headers: {
                 'Message-ID': messageId,
-                'X-Entity-Ref-ID': crypto_1.default.randomUUID(),
+                'X-Entity-Ref-ID': crypto.randomUUID(),
                 'Precedence': 'bulk',
                 'Auto-Submitted': 'auto-generated',
-                'X-Google-Thread-Id': crypto_1.default.randomUUID(),
+                'X-Google-Thread-Id': crypto.randomUUID(),
             },
         };
         try {
@@ -330,7 +320,7 @@ function enviarNotificacionRechazo(destinatario, nombreReceptor, motivo) {
 /**
  * Envía correo de solicitud de firma para devolución
  */
-function enviarCorreoDevolucion(destinatario, nombreReceptor, token, dispositivos, comentarios) {
+export function enviarCorreoDevolucion(destinatario, nombreReceptor, token, dispositivos, comentarios) {
     return __awaiter(this, void 0, void 0, function* () {
         const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
         const enlaceFirma = `${frontendUrl}/firmar-devolucion/${token}`;
@@ -415,18 +405,18 @@ function enviarCorreoDevolucion(destinatario, nombreReceptor, token, dispositivo
   `;
         // Generar IDs únicos para evitar que Gmail agrupe los correos en hilos
         const domain = process.env.EMAIL_SERVICE || 'gmail';
-        const messageId = `<${crypto_1.default.randomUUID()}@${domain}.com>`;
+        const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
         const mailOptions = {
             from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
             to: destinatario,
-            subject: `[${crypto_1.default.randomUUID().substring(0, 8)}] 📦 Devolución de Equipos - Requiere su firma`,
+            subject: `[${crypto.randomUUID().substring(0, 8)}] 📦 Devolución de Equipos - Requiere su firma`,
             html: htmlContent,
             headers: {
                 'Message-ID': messageId,
-                'X-Entity-Ref-ID': crypto_1.default.randomUUID(),
+                'X-Entity-Ref-ID': crypto.randomUUID(),
                 'Precedence': 'bulk',
                 'Auto-Submitted': 'auto-generated',
-                'X-Google-Thread-Id': crypto_1.default.randomUUID(),
+                'X-Google-Thread-Id': crypto.randomUUID(),
             },
         };
         console.log('📨 Intentando enviar correo de devolución...');
@@ -449,7 +439,7 @@ function enviarCorreoDevolucion(destinatario, nombreReceptor, token, dispositivo
 /**
  * Envía confirmación de devolución completada
  */
-function enviarConfirmacionDevolucion(destinatarios, nombreReceptor, dispositivos, fechaDevolucion) {
+export function enviarConfirmacionDevolucion(destinatarios, nombreReceptor, dispositivos, fechaDevolucion) {
     return __awaiter(this, void 0, void 0, function* () {
         const listaDispositivos = dispositivos.map(d => `<tr>
       <td style="padding: 8px; border: 1px solid #ddd;">${d.tipo}</td>
@@ -514,18 +504,18 @@ function enviarConfirmacionDevolucion(destinatarios, nombreReceptor, dispositivo
   `;
         // Generar IDs únicos
         const domain = process.env.EMAIL_SERVICE || 'gmail';
-        const messageId = `<${crypto_1.default.randomUUID()}@${domain}.com>`;
+        const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
         const mailOptions = {
             from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
             to: destinatarios.join(', '),
-            subject: `[${crypto_1.default.randomUUID().substring(0, 8)}] ✅ Devolución Completada - ${nombreReceptor} - ${fechaDevolucion.toLocaleDateString('es-MX')}`,
+            subject: `[${crypto.randomUUID().substring(0, 8)}] ✅ Devolución Completada - ${nombreReceptor} - ${fechaDevolucion.toLocaleDateString('es-MX')}`,
             html: htmlContent,
             headers: {
                 'Message-ID': messageId,
-                'X-Entity-Ref-ID': crypto_1.default.randomUUID(),
+                'X-Entity-Ref-ID': crypto.randomUUID(),
                 'Precedence': 'bulk',
                 'Auto-Submitted': 'auto-generated',
-                'X-Google-Thread-Id': crypto_1.default.randomUUID(),
+                'X-Google-Thread-Id': crypto.randomUUID(),
             },
         };
         try {
@@ -539,4 +529,4 @@ function enviarConfirmacionDevolucion(destinatarios, nombreReceptor, dispositivo
         }
     });
 }
-exports.default = transporter;
+export default transporter;

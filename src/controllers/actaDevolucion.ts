@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
-import sequelize from '../database/connection';
-import { ActaDevolucion } from '../models/actaDevolucion';
-import { DetalleDevolucion } from '../models/detalleDevolucion';
-import { TokenDevolucion } from '../models/tokenDevolucion';
-import { Dispositivo } from '../models/dispositivo';
-import { MovimientoDispositivo } from '../models/movimientoDispositivo';
-import { enviarCorreoDevolucion, enviarConfirmacionDevolucion } from '../config/email';
-import { getPhotoUrl } from '../config/multer';
-import { getIO } from '../models/server';
+import sequelize from '../database/connection.js';
+import { ActaDevolucion } from '../models/actaDevolucion.js';
+import { DetalleDevolucion } from '../models/detalleDevolucion.js';
+import { TokenDevolucion } from '../models/tokenDevolucion.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { enviarCorreoDevolucion, enviarConfirmacionDevolucion } from '../config/email.js';
+import { getPhotoUrl } from '../config/multer.js';
+import { getIO } from '../models/server.js';
 
 /**
  * Generar número de acta de devolución único

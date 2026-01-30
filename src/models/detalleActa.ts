@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../database/connection';
-import { ActaEntrega } from './actaEntrega';
-import { Dispositivo } from './dispositivo';
+import sequelize from '../database/connection.js';
+import { ActaEntrega } from './actaEntrega.js';
+import { Dispositivo } from './dispositivo.js';
 
 /**
  * Modelo DetalleActa - Relación entre Actas y Dispositivos

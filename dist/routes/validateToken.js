@@ -1,16 +1,11 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+import jwt from 'jsonwebtoken';
 const validateToken = (req, res, next) => {
     const headersToken = req.headers['authorization'];
     console.log(headersToken);
     if (headersToken != undefined && headersToken.startsWith('Bearer ')) {
         try {
             const token = headersToken.slice(7);
-            jsonwebtoken_1.default.verify(token, process.env.SECRET_KEY || 'DxVj971V5CxBQGB7hDqwOenbRbbH4mrS');
+            jwt.verify(token, process.env.SECRET_KEY || 'DxVj971V5CxBQGB7hDqwOenbRbbH4mrS');
             next();
         }
         catch (error) {
@@ -25,4 +20,4 @@ const validateToken = (req, res, next) => {
         });
     }
 };
-exports.default = validateToken;
+export default validateToken;

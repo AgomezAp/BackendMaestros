@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import validateToken from './validateToken';
-import { upload } from '../config/multer';
+import validateToken from './validateToken.js';
+import { upload } from '../config/multer.js';
 import {
   obtenerDispositivosEntregados,
   obtenerActasDevolucion,
@@ -11,7 +11,7 @@ import {
   firmarActaDevolucionConToken,
   rechazarActaDevolucionConToken,
   reenviarCorreoDevolucion
-} from '../controllers/actaDevolucion';
+} from '../controllers/actaDevolucion.js';
 
 const router = Router();
 

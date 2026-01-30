@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,17 +7,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.darDeBajaDispositivo = exports.obtenerTrazabilidad = exports.obtenerEstadisticas = exports.cambiarEstadoDispositivo = exports.actualizarDispositivo = exports.registrarDispositivo = exports.obtenerDispositivoPorId = exports.obtenerDisponibles = exports.obtenerDispositivos = void 0;
-const sequelize_1 = require("sequelize");
-const dispositivo_1 = require("../models/dispositivo");
-const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
-const multer_1 = require("../config/multer");
-const server_1 = require("../models/server");
+import { Op } from 'sequelize';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { getPhotoUrl } from '../config/multer.js';
+import { getIO } from '../models/server.js';
 /**
  * Obtener todos los dispositivos con filtros
  */
-const obtenerDispositivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerDispositivos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { estado, categoria, ubicacion, busqueda } = req.query;
         let where = {};
@@ -32,15 +29,15 @@ const obtenerDispositivos = (req, res) => __awaiter(void 0, void 0, void 0, func
             where.ubicacion = ubicacion;
         }
         if (busqueda) {
-            where[sequelize_1.Op.or] = [
-                { nombre: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { marca: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { modelo: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { serial: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { imei: { [sequelize_1.Op.iLike]: `%${busqueda}%` } }
+            where[Op.or] = [
+                { nombre: { [Op.iLike]: `%${busqueda}%` } },
+                { marca: { [Op.iLike]: `%${busqueda}%` } },
+                { modelo: { [Op.iLike]: `%${busqueda}%` } },
+                { serial: { [Op.iLike]: `%${busqueda}%` } },
+                { imei: { [Op.iLike]: `%${busqueda}%` } }
             ];
         }
-        const dispositivos = yield dispositivo_1.Dispositivo.findAll({
+        const dispositivos = yield Dispositivo.findAll({
             where,
             order: [['createdAt', 'DESC']]
         });
@@ -51,13 +48,12 @@ const obtenerDispositivos = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al obtener los dispositivos' });
     }
 });
-exports.obtenerDispositivos = obtenerDispositivos;
 /**
  * Obtener dispositivos disponibles para préstamo
  */
-const obtenerDisponibles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerDisponibles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const dispositivos = yield dispositivo_1.Dispositivo.findAll({
+        const dispositivos = yield Dispositivo.findAll({
             where: { estado: 'disponible' },
             order: [['categoria', 'ASC'], ['nombre', 'ASC']]
         });
@@ -68,17 +64,16 @@ const obtenerDisponibles = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json({ msg: 'Error al obtener los dispositivos disponibles' });
     }
 });
-exports.obtenerDisponibles = obtenerDisponibles;
 /**
  * Obtener un dispositivo por ID con su historial
  */
-const obtenerDispositivoPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerDispositivoPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id), {
+        const dispositivo = yield Dispositivo.findByPk(Number(id), {
             include: [
                 {
-                    model: movimientoDispositivo_1.MovimientoDispositivo,
+                    model: MovimientoDispositivo,
                     as: 'movimientos',
                     order: [['fecha', 'DESC']]
                 }
@@ -95,16 +90,15 @@ const obtenerDispositivoPorId = (req, res) => __awaiter(void 0, void 0, void 0, 
         res.status(500).json({ msg: 'Error al obtener el dispositivo' });
     }
 });
-exports.obtenerDispositivoPorId = obtenerDispositivoPorId;
 /**
  * Registrar nuevo dispositivo en el inventario
  */
-const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { nombre, categoria, marca, modelo, serial, imei, color, descripcion, condicion, ubicacion, observaciones, Uid } = req.body;
         // Verificar serial único si se proporciona
         if (serial) {
-            const existeSerial = yield dispositivo_1.Dispositivo.findOne({ where: { serial } });
+            const existeSerial = yield Dispositivo.findOne({ where: { serial } });
             if (existeSerial) {
                 res.status(400).json({ msg: 'Ya existe un dispositivo con ese número de serie' });
                 return;
@@ -113,10 +107,10 @@ const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
         // Procesar fotos si se subieron
         let fotos = [];
         if (req.files && Array.isArray(req.files)) {
-            fotos = req.files.map(file => (0, multer_1.getPhotoUrl)(file.filename, 'dispositivos'));
+            fotos = req.files.map(file => getPhotoUrl(file.filename, 'dispositivos'));
         }
         // Crear dispositivo
-        const dispositivo = yield dispositivo_1.Dispositivo.create({
+        const dispositivo = yield Dispositivo.create({
             nombre,
             categoria,
             marca,
@@ -134,7 +128,7 @@ const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
             Uid
         });
         // Registrar movimiento de ingreso
-        yield movimientoDispositivo_1.MovimientoDispositivo.create({
+        yield MovimientoDispositivo.create({
             dispositivoId: dispositivo.id,
             tipoMovimiento: 'ingreso',
             estadoAnterior: null,
@@ -145,7 +139,7 @@ const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
         // Emitir evento WebSocket
         try {
-            const io = (0, server_1.getIO)();
+            const io = getIO();
             io.to('inventario').emit('dispositivo:created', { dispositivo });
         }
         catch (e) {
@@ -161,15 +155,14 @@ const registrarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ msg: 'Error al registrar el dispositivo' });
     }
 });
-exports.registrarDispositivo = registrarDispositivo;
 /**
  * Actualizar dispositivo
  */
-const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { nombre, categoria, marca, modelo, serial, imei, color, descripcion, condicion, ubicacion, observaciones, Uid } = req.body;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
+        const dispositivo = yield Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;
@@ -189,7 +182,7 @@ const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fu
             observaciones
         });
         // Registrar movimiento de actualización
-        yield movimientoDispositivo_1.MovimientoDispositivo.create({
+        yield MovimientoDispositivo.create({
             dispositivoId: dispositivo.id,
             tipoMovimiento: 'actualizacion',
             descripcion: `Dispositivo actualizado`,
@@ -198,7 +191,7 @@ const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
         // Emitir evento WebSocket
         try {
-            const io = (0, server_1.getIO)();
+            const io = getIO();
             io.to('inventario').emit('dispositivo:updated', { dispositivo });
         }
         catch (e) {
@@ -214,15 +207,14 @@ const actualizarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fu
         res.status(500).json({ msg: 'Error al actualizar el dispositivo' });
     }
 });
-exports.actualizarDispositivo = actualizarDispositivo;
 /**
  * Cambiar estado del dispositivo
  */
-const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { nuevoEstado, motivo, Uid } = req.body;
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
+        const dispositivo = yield Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;
@@ -230,7 +222,7 @@ const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0,
         const estadoAnterior = dispositivo.estado;
         yield dispositivo.update({ estado: nuevoEstado });
         // Registrar movimiento de cambio de estado
-        yield movimientoDispositivo_1.MovimientoDispositivo.create({
+        yield MovimientoDispositivo.create({
             dispositivoId: dispositivo.id,
             tipoMovimiento: 'cambio_estado',
             estadoAnterior,
@@ -241,7 +233,7 @@ const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0,
         });
         // Emitir evento WebSocket
         try {
-            const io = (0, server_1.getIO)();
+            const io = getIO();
             io.to('inventario').emit('dispositivo:updated', { dispositivo, estadoAnterior, nuevoEstado });
         }
         catch (e) {
@@ -257,27 +249,26 @@ const cambiarEstadoDispositivo = (req, res) => __awaiter(void 0, void 0, void 0,
         res.status(500).json({ msg: 'Error al cambiar el estado del dispositivo' });
     }
 });
-exports.cambiarEstadoDispositivo = cambiarEstadoDispositivo;
 /**
  * Obtener estadísticas del inventario
  */
-const obtenerEstadisticas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerEstadisticas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const stats = yield dispositivo_1.Dispositivo.findAll({
+        const stats = yield Dispositivo.findAll({
             attributes: [
                 'estado',
-                [dispositivo_1.Dispositivo.sequelize.fn('COUNT', dispositivo_1.Dispositivo.sequelize.col('id')), 'cantidad']
+                [Dispositivo.sequelize.fn('COUNT', Dispositivo.sequelize.col('id')), 'cantidad']
             ],
             group: ['estado']
         });
-        const categorias = yield dispositivo_1.Dispositivo.findAll({
+        const categorias = yield Dispositivo.findAll({
             attributes: [
                 'categoria',
-                [dispositivo_1.Dispositivo.sequelize.fn('COUNT', dispositivo_1.Dispositivo.sequelize.col('id')), 'cantidad']
+                [Dispositivo.sequelize.fn('COUNT', Dispositivo.sequelize.col('id')), 'cantidad']
             ],
             group: ['categoria']
         });
-        const total = yield dispositivo_1.Dispositivo.count();
+        const total = yield Dispositivo.count();
         res.json({
             total,
             porEstado: stats,
@@ -289,19 +280,18 @@ const obtenerEstadisticas = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al obtener las estadísticas' });
     }
 });
-exports.obtenerEstadisticas = obtenerEstadisticas;
 /**
  * Obtener historial/trazabilidad de un dispositivo
  */
-const obtenerTrazabilidad = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerTrazabilidad = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const movimientos = yield movimientoDispositivo_1.MovimientoDispositivo.findAll({
+        const movimientos = yield MovimientoDispositivo.findAll({
             where: { dispositivoId: id },
             order: [['fecha', 'DESC']],
             include: [
                 {
-                    model: dispositivo_1.Dispositivo,
+                    model: Dispositivo,
                     as: 'dispositivo',
                     attributes: ['nombre', 'categoria', 'marca', 'modelo']
                 }
@@ -314,15 +304,14 @@ const obtenerTrazabilidad = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al obtener la trazabilidad' });
     }
 });
-exports.obtenerTrazabilidad = obtenerTrazabilidad;
 /**
  * Dar de baja un dispositivo
  */
-const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { motivo, nuevoEstado, Uid } = req.body; // nuevoEstado: dañado, perdido, obsoleto
-        const dispositivo = yield dispositivo_1.Dispositivo.findByPk(Number(id));
+        const dispositivo = yield Dispositivo.findByPk(Number(id));
         if (!dispositivo) {
             res.status(404).json({ msg: 'Dispositivo no encontrado' });
             return;
@@ -333,7 +322,7 @@ const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
         }
         const estadoAnterior = dispositivo.estado;
         yield dispositivo.update({ estado: nuevoEstado });
-        yield movimientoDispositivo_1.MovimientoDispositivo.create({
+        yield MovimientoDispositivo.create({
             dispositivoId: dispositivo.id,
             tipoMovimiento: 'baja',
             estadoAnterior,
@@ -352,4 +341,3 @@ const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ msg: 'Error al dar de baja el dispositivo' });
     }
 });
-exports.darDeBajaDispositivo = darDeBajaDispositivo;

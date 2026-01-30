@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,39 +7,34 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.obtenerEstadoFirma = exports.reenviarCorreoFirma = exports.rechazarActaConToken = exports.firmarActaConToken = exports.obtenerActaPorToken = exports.enviarSolicitudFirma = void 0;
-const uuid_1 = require("uuid");
-const connection_1 = __importDefault(require("../database/connection"));
-const tokenFirma_1 = require("../models/tokenFirma");
-const actaEntrega_1 = require("../models/actaEntrega");
-const detalleActa_1 = require("../models/detalleActa");
-const dispositivo_1 = require("../models/dispositivo");
-const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
-const email_1 = require("../config/email");
-const server_1 = require("../models/server");
+import { v4 as uuidv4 } from 'uuid';
+import sequelize from '../database/connection.js';
+import { TokenFirma } from '../models/tokenFirma.js';
+import { ActaEntrega } from '../models/actaEntrega.js';
+import { DetalleActa } from '../models/detalleActa.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { enviarCorreoFirma, enviarActaFirmada, enviarNotificacionRechazo } from '../config/email.js';
+import { getIO } from '../models/server.js';
 /**
  * Enviar correo de solicitud de firma para un acta
  */
-const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const transaction = yield connection_1.default.transaction();
+    const transaction = yield sequelize.transaction();
     console.log('📧 [enviarSolicitudFirma] Iniciando proceso...');
     console.log('   Acta ID:', req.params.id);
     try {
         const { id } = req.params; // ID del acta
         const { correoNotificacion } = req.body; // Correo opcional para notificar cuando se firme
-        const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
+        const acta = yield ActaEntrega.findByPk(Number(id), {
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -63,7 +57,7 @@ const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, fun
             return;
         }
         // Cancelar tokens anteriores pendientes para esta acta
-        yield tokenFirma_1.TokenFirma.update({ estado: 'cancelado' }, {
+        yield TokenFirma.update({ estado: 'cancelado' }, {
             where: {
                 actaId: acta.id,
                 estado: 'pendiente'
@@ -71,10 +65,10 @@ const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, fun
             transaction
         });
         // Generar nuevo token único
-        const token = (0, uuid_1.v4)();
+        const token = uuidv4();
         console.log('   Token generado:', token.substring(0, 8) + '...');
         // Crear registro del token
-        yield tokenFirma_1.TokenFirma.create({
+        yield TokenFirma.create({
             token,
             actaId: acta.id,
             correoReceptor: acta.correoReceptor,
@@ -100,7 +94,7 @@ const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.log('   Dispositivos preparados:', dispositivos.length);
         // Enviar correo
         console.log('   Enviando correo...');
-        yield (0, email_1.enviarCorreoFirma)(acta.correoReceptor, acta.nombreReceptor, token, dispositivos, acta.observacionesEntrega);
+        yield enviarCorreoFirma(acta.correoReceptor, acta.nombreReceptor, token, dispositivos, acta.observacionesEntrega);
         console.log('   ✅ Correo enviado, haciendo commit...');
         yield transaction.commit();
         console.log('   ✅ Proceso completado exitosamente');
@@ -116,27 +110,26 @@ const enviarSolicitudFirma = (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ msg: error.message || 'Error al enviar la solicitud de firma' });
     }
 });
-exports.enviarSolicitudFirma = enviarSolicitudFirma;
 /**
  * Obtener datos del acta por token (PÚBLICO - sin autenticación)
  */
-const obtenerActaPorToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActaPorToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const { token } = req.params;
-        const tokenFirma = yield tokenFirma_1.TokenFirma.findOne({
+        const tokenFirma = yield TokenFirma.findOne({
             where: { token },
             include: [
                 {
-                    model: actaEntrega_1.ActaEntrega,
+                    model: ActaEntrega,
                     as: 'acta',
                     include: [
                         {
-                            model: detalleActa_1.DetalleActa,
+                            model: DetalleActa,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo',
                                     attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial', 'descripcion']
                                 }
@@ -197,13 +190,12 @@ const obtenerActaPorToken = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al obtener los datos del acta' });
     }
 });
-exports.obtenerActaPorToken = obtenerActaPorToken;
 /**
  * Firmar acta con token (PÚBLICO - sin autenticación)
  */
-const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const transaction = yield connection_1.default.transaction();
+    const transaction = yield sequelize.transaction();
     try {
         const { token } = req.params;
         const { firma, correosNotificacion } = req.body; // firma en base64, correosNotificacion opcional
@@ -212,19 +204,19 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
             res.status(400).json({ msg: 'La firma es requerida' });
             return;
         }
-        const tokenFirma = yield tokenFirma_1.TokenFirma.findOne({
+        const tokenFirma = yield TokenFirma.findOne({
             where: { token },
             include: [
                 {
-                    model: actaEntrega_1.ActaEntrega,
+                    model: ActaEntrega,
                     as: 'acta',
                     include: [
                         {
-                            model: detalleActa_1.DetalleActa,
+                            model: DetalleActa,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo'
                                 }
                             ]
@@ -257,7 +249,7 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
             userAgent: userAgent.substring(0, 500)
         }, { transaction });
         // Actualizar acta con la firma
-        yield actaEntrega_1.ActaEntrega.update({
+        yield ActaEntrega.update({
             firmaReceptor: firma,
             estado: 'activa',
             fechaFirma: ahora
@@ -267,9 +259,9 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
         // Actualizar estado de dispositivos a 'entregado'
         for (const detalle of acta.detalles) {
-            yield dispositivo_1.Dispositivo.update({ estado: 'entregado' }, { where: { id: detalle.dispositivoId }, transaction });
+            yield Dispositivo.update({ estado: 'entregado' }, { where: { id: detalle.dispositivoId }, transaction });
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: detalle.dispositivoId,
                 tipoMovimiento: 'firma_entrega',
                 estadoAnterior: 'disponible',
@@ -281,7 +273,7 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
         yield transaction.commit();
         // Emitir evento WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         const dispositivosIds = acta.detalles.map((d) => d.dispositivoId);
         io.to('actas').emit('acta:signed', { actaId: acta.id, estado: 'activa' });
         io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
@@ -301,7 +293,7 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
             if (correosNotificacion && Array.isArray(correosNotificacion)) {
                 destinatarios.push(...correosNotificacion);
             }
-            yield (0, email_1.enviarActaFirmada)(destinatarios, acta.nombreReceptor, dispositivos, ahora);
+            yield enviarActaFirmada(destinatarios, acta.nombreReceptor, dispositivos, ahora);
         }
         catch (emailError) {
             console.error('Error enviando confirmación por correo:', emailError);
@@ -318,12 +310,11 @@ const firmarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json({ msg: 'Error al procesar la firma' });
     }
 });
-exports.firmarActaConToken = firmarActaConToken;
 /**
  * Rechazar/Devolver acta para corrección (PÚBLICO - sin autenticación)
  */
-const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const transaction = yield connection_1.default.transaction();
+export const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transaction = yield sequelize.transaction();
     try {
         const { token } = req.params;
         const { motivo, correoNotificacion } = req.body;
@@ -332,11 +323,11 @@ const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
             res.status(400).json({ msg: 'Debe indicar el motivo del rechazo' });
             return;
         }
-        const tokenFirma = yield tokenFirma_1.TokenFirma.findOne({
+        const tokenFirma = yield TokenFirma.findOne({
             where: { token },
             include: [
                 {
-                    model: actaEntrega_1.ActaEntrega,
+                    model: ActaEntrega,
                     as: 'acta'
                 }
             ],
@@ -359,7 +350,7 @@ const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
             motivoRechazo: motivo
         }, { transaction });
         // Actualizar estado del acta
-        yield actaEntrega_1.ActaEntrega.update({
+        yield ActaEntrega.update({
             estado: 'rechazada',
             observacionesDevolucion: `Rechazada por el receptor: ${motivo}`
         }, {
@@ -368,12 +359,12 @@ const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
         yield transaction.commit();
         // Emitir evento WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         io.to('actas').emit('acta:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
         // Enviar notificación de rechazo
         try {
             if (correoNotificacion) {
-                yield (0, email_1.enviarNotificacionRechazo)(correoNotificacion, acta.nombreReceptor, motivo);
+                yield enviarNotificacionRechazo(correoNotificacion, acta.nombreReceptor, motivo);
             }
         }
         catch (emailError) {
@@ -390,30 +381,29 @@ const rechazarActaConToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
         res.status(500).json({ msg: 'Error al procesar el rechazo' });
     }
 });
-exports.rechazarActaConToken = rechazarActaConToken;
 /**
  * Reenviar correo de firma
  */
-const reenviarCorreoFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const reenviarCorreoFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const { id } = req.params;
-        const tokenFirma = yield tokenFirma_1.TokenFirma.findOne({
+        const tokenFirma = yield TokenFirma.findOne({
             where: {
                 actaId: Number(id),
                 estado: 'pendiente'
             },
             include: [
                 {
-                    model: actaEntrega_1.ActaEntrega,
+                    model: ActaEntrega,
                     as: 'acta',
                     include: [
                         {
-                            model: detalleActa_1.DetalleActa,
+                            model: DetalleActa,
                             as: 'detalles',
                             include: [
                                 {
-                                    model: dispositivo_1.Dispositivo,
+                                    model: Dispositivo,
                                     as: 'dispositivo'
                                 }
                             ]
@@ -436,7 +426,7 @@ const reenviarCorreoFirma = (req, res) => __awaiter(void 0, void 0, void 0, func
                 serial: ((_d = d.dispositivo) === null || _d === void 0 ? void 0 : _d.serial) || 'N/A'
             });
         })) || [];
-        yield (0, email_1.enviarCorreoFirma)(acta.correoReceptor, acta.nombreReceptor, tokenFirma.token, dispositivos, acta.observacionesEntrega);
+        yield enviarCorreoFirma(acta.correoReceptor, acta.nombreReceptor, tokenFirma.token, dispositivos, acta.observacionesEntrega);
         // Actualizar fecha de envío
         yield tokenFirma.update({ fechaEnvio: new Date() });
         res.json({
@@ -449,14 +439,13 @@ const reenviarCorreoFirma = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: error.message || 'Error al reenviar el correo' });
     }
 });
-exports.reenviarCorreoFirma = reenviarCorreoFirma;
 /**
  * Obtener estado de firma de un acta
  */
-const obtenerEstadoFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerEstadoFirma = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const tokens = yield tokenFirma_1.TokenFirma.findAll({
+        const tokens = yield TokenFirma.findAll({
             where: { actaId: Number(id) },
             order: [['fechaEnvio', 'DESC']]
         });
@@ -486,4 +475,3 @@ const obtenerEstadoFirma = (req, res) => __awaiter(void 0, void 0, void 0, funct
         res.status(500).json({ msg: 'Error al obtener el estado de firma' });
     }
 });
-exports.obtenerEstadoFirma = obtenerEstadoFirma;

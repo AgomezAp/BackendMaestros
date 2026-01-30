@@ -1,6 +1,11 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Obtener __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Crear directorio de uploads si no existe
 const uploadDir = path.join(__dirname, '../../uploads');

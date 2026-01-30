@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { upload } from '../config/multer';
+import { upload } from '../config/multer.js';
 import {
   obtenerActas,
   obtenerActaPorId,
@@ -7,8 +7,8 @@ import {
   registrarDevolucion,
   obtenerActasActivas,
   obtenerHistorialDispositivo
-} from '../controllers/actaEntrega';
-import validateToken from './validateToken';
+} from '../controllers/actaEntrega.js';
+import validateToken from './validateToken.js';
 
 const router = Router();
 

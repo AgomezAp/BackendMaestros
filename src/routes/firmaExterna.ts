@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import validateToken from './validateToken';
+import validateToken from './validateToken.js';
 import {
   enviarSolicitudFirma,
   obtenerActaPorToken,
@@ -7,7 +7,7 @@ import {
   rechazarActaConToken,
   reenviarCorreoFirma,
   obtenerEstadoFirma
-} from '../controllers/firmaExterna';
+} from '../controllers/firmaExterna.js';
 
 const router = Router();
 

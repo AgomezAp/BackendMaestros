@@ -1,19 +1,14 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const analista_1 = require("../controllers/analista");
-const validateToken_1 = __importDefault(require("./validateToken"));
-const router = (0, express_1.Router)();
+import { Router } from 'express';
+import { actualizarAnalista, desactivarAnalista, eliminarAnalista, obtenerAnalistas, obtenerAnalistasActivos, obtenerAnalistaPorId, reactivarAnalista, registrarAnalista, } from '../controllers/analista.js';
+import validateToken from './validateToken.js';
+const router = Router();
 // Rutas de analistas
-router.get("/api/analistas/obtener", validateToken_1.default, analista_1.obtenerAnalistas);
-router.get("/api/analistas/activos", validateToken_1.default, analista_1.obtenerAnalistasActivos);
-router.get("/api/analistas/obtener/:Aid", validateToken_1.default, analista_1.obtenerAnalistaPorId);
-router.post("/api/analistas/registrar", validateToken_1.default, analista_1.registrarAnalista);
-router.patch("/api/analistas/actualizar/:Aid", validateToken_1.default, analista_1.actualizarAnalista);
-router.patch("/api/analistas/desactivar/:Aid", validateToken_1.default, analista_1.desactivarAnalista);
-router.patch("/api/analistas/reactivar/:Aid", validateToken_1.default, analista_1.reactivarAnalista);
-router.delete("/api/analistas/eliminar/:Aid", validateToken_1.default, analista_1.eliminarAnalista);
-exports.default = router;
+router.get("/api/analistas/obtener", validateToken, obtenerAnalistas);
+router.get("/api/analistas/activos", validateToken, obtenerAnalistasActivos);
+router.get("/api/analistas/obtener/:Aid", validateToken, obtenerAnalistaPorId);
+router.post("/api/analistas/registrar", validateToken, registrarAnalista);
+router.patch("/api/analistas/actualizar/:Aid", validateToken, actualizarAnalista);
+router.patch("/api/analistas/desactivar/:Aid", validateToken, desactivarAnalista);
+router.patch("/api/analistas/reactivar/:Aid", validateToken, reactivarAnalista);
+router.delete("/api/analistas/eliminar/:Aid", validateToken, eliminarAnalista);
+export default router;

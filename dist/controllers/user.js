@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,16 +7,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.obtenerMaestrosPorIdUsuario = exports.eliminarUsuarioId = exports.restablecerContrasena = exports.login = exports.register = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const maestros_1 = require("../models/maestros");
-const user_1 = require("../models/user");
-const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { Maestro } from '../models/maestros.js';
+import { User } from '../models/user.js';
+export const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, apellido, correo, contrasena } = req.body;
     const emailDomain = correo.split('@')[1];
     if (emailDomain !== 'andrespublicidadtg.com') {
@@ -26,15 +20,15 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
     // Verificar si el usuario ya existe
-    const userOne = yield user_1.User.findOne({ where: { correo: correo } });
+    const userOne = yield User.findOne({ where: { correo: correo } });
     if (userOne) {
         return res.status(400).json({
             msg: `El usuario ya existe con el email: ${correo}`,
         });
     }
-    const passwordHash = yield bcrypt_1.default.hash(contrasena, 10);
+    const passwordHash = yield bcrypt.hash(contrasena, 10);
     try {
-        const newUser = yield user_1.User.create({
+        const newUser = yield User.create({
             nombre,
             apellido,
             correo,
@@ -53,10 +47,9 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
     }
 });
-exports.register = register;
-const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { correo, contrasena } = req.body;
-    const user = yield user_1.User.findOne({
+    const user = yield User.findOne({
         where: { correo },
     });
     if (!user) {
@@ -64,13 +57,13 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             msg: `El usuario no existe con el email: ${correo}`,
         });
     }
-    const contrasenaValida = yield bcrypt_1.default.compare(contrasena, user.contrasena);
+    const contrasenaValida = yield bcrypt.compare(contrasena, user.contrasena);
     if (!contrasenaValida) {
         return res.status(400).json({
             msg: "Contraseña incorrecta",
         });
     }
-    const token = jsonwebtoken_1.default.sign({
+    const token = jwt.sign({
         Uid: user.Uid,
         correo: user.correo,
     }, process.env.SECRET_KEY || "DxVj971V5CxBQGB7hDqwOenbRbbH4mrS", {
@@ -84,15 +77,14 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         token,
     });
 });
-exports.login = login;
-const restablecerContrasena = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const restablecerContrasena = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { correo, nuevaContrasena } = req.body;
     try {
-        const user = yield user_1.User.findOne({ where: { correo } });
+        const user = yield User.findOne({ where: { correo } });
         if (!user) {
             return res.status(404).json({ msg: "Usario no encontrado" });
         }
-        const passwordHash = yield bcrypt_1.default.hash(nuevaContrasena, 10);
+        const passwordHash = yield bcrypt.hash(nuevaContrasena, 10);
         user.contrasena = passwordHash;
         yield user.save();
         res.status(200).json({
@@ -107,11 +99,10 @@ const restablecerContrasena = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
     }
 });
-exports.restablecerContrasena = restablecerContrasena;
-const eliminarUsuarioId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const eliminarUsuarioId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Uid } = req.params;
     try {
-        const user = yield user_1.User.findByPk(Number(Uid));
+        const user = yield User.findByPk(Number(Uid));
         if (!user) {
             return res.status(404).json({ msg: "Usuario no encontrado" });
         }
@@ -122,12 +113,11 @@ const eliminarUsuarioId = (req, res) => __awaiter(void 0, void 0, void 0, functi
         res.status(500).json({ msg: "Error al eliminar el usuario", error });
     }
 });
-exports.eliminarUsuarioId = eliminarUsuarioId;
-const obtenerMaestrosPorIdUsuario = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerMaestrosPorIdUsuario = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { Uid } = req.params;
     try {
-        const user = yield user_1.User.findByPk(Number(Uid), {
-            include: [{ model: maestros_1.Maestro, as: 'maestros' }]
+        const user = yield User.findByPk(Number(Uid), {
+            include: [{ model: Maestro, as: 'maestros' }]
         });
         if (!user) {
             return res.status(404).json({ msg: 'Usuario no encontrado' });
@@ -139,4 +129,3 @@ const obtenerMaestrosPorIdUsuario = (req, res) => __awaiter(void 0, void 0, void
         res.status(500).json({ msg: 'Error al obtener los maestros del usuario', error });
     }
 });
-exports.obtenerMaestrosPorIdUsuario = obtenerMaestrosPorIdUsuario;

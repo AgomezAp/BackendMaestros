@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Dispositivo } from '../models/dispositivo';
-import { MovimientoDispositivo } from '../models/movimientoDispositivo';
-import { getPhotoUrl, deletePhoto } from '../config/multer';
-import { getIO } from '../models/server';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { getPhotoUrl, deletePhoto } from '../config/multer.js';
+import { getIO } from '../models/server.js';
 
 /**
  * Obtener todos los dispositivos con filtros

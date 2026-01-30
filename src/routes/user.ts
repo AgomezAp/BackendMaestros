@@ -6,8 +6,8 @@ import {
   obtenerMaestrosPorIdUsuario,
   register,
   restablecerContrasena,
-} from '../controllers/user';
-import validateToken from './validateToken';
+} from '../controllers/user.js';
+import validateToken from './validateToken.js';
 
 const router = Router();
 

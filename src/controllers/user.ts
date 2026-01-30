@@ -5,8 +5,8 @@ import {
 } from 'express';
 import jwt from 'jsonwebtoken';
 
-import { Maestro } from '../models/maestros';
-import { User } from '../models/user';
+import { Maestro } from '../models/maestros.js';
+import { User } from '../models/user.js';
 
 export const register = async (req: Request, res: Response): Promise<any> => {
   const { nombre, apellido, correo, contrasena } = req.body;

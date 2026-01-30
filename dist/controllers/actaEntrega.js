@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,28 +7,23 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.obtenerHistorialDispositivo = exports.obtenerActasActivas = exports.registrarDevolucion = exports.crearActaEntrega = exports.obtenerActaPorId = exports.obtenerActas = void 0;
-const sequelize_1 = require("sequelize");
-const connection_1 = __importDefault(require("../database/connection"));
-const actaEntrega_1 = require("../models/actaEntrega");
-const detalleActa_1 = require("../models/detalleActa");
-const dispositivo_1 = require("../models/dispositivo");
-const movimientoDispositivo_1 = require("../models/movimientoDispositivo");
-const multer_1 = require("../config/multer");
-const server_1 = require("../models/server");
+import { Op } from 'sequelize';
+import sequelize from '../database/connection.js';
+import { ActaEntrega } from '../models/actaEntrega.js';
+import { DetalleActa } from '../models/detalleActa.js';
+import { Dispositivo } from '../models/dispositivo.js';
+import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { getPhotoUrl } from '../config/multer.js';
+import { getIO } from '../models/server.js';
 /**
  * Generar número de acta único
  */
 const generarNumeroActa = () => __awaiter(void 0, void 0, void 0, function* () {
     const year = new Date().getFullYear();
-    const ultimaActa = yield actaEntrega_1.ActaEntrega.findOne({
+    const ultimaActa = yield ActaEntrega.findOne({
         where: {
             numeroActa: {
-                [sequelize_1.Op.like]: `ACTA-${year}-%`
+                [Op.like]: `ACTA-${year}-%`
             }
         },
         order: [['id', 'DESC']]
@@ -44,7 +38,7 @@ const generarNumeroActa = () => __awaiter(void 0, void 0, void 0, function* () {
 /**
  * Obtener todas las actas de entrega
  */
-const obtenerActas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { estado, busqueda, fechaInicio, fechaFin } = req.query;
         let where = {};
@@ -52,26 +46,26 @@ const obtenerActas = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             where.estado = estado;
         }
         if (busqueda) {
-            where[sequelize_1.Op.or] = [
-                { numeroActa: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { nombreReceptor: { [sequelize_1.Op.iLike]: `%${busqueda}%` } },
-                { cargoReceptor: { [sequelize_1.Op.iLike]: `%${busqueda}%` } }
+            where[Op.or] = [
+                { numeroActa: { [Op.iLike]: `%${busqueda}%` } },
+                { nombreReceptor: { [Op.iLike]: `%${busqueda}%` } },
+                { cargoReceptor: { [Op.iLike]: `%${busqueda}%` } }
             ];
         }
         if (fechaInicio && fechaFin) {
             where.fechaEntrega = {
-                [sequelize_1.Op.between]: [new Date(fechaInicio), new Date(fechaFin)]
+                [Op.between]: [new Date(fechaInicio), new Date(fechaFin)]
             };
         }
-        const actas = yield actaEntrega_1.ActaEntrega.findAll({
+        const actas = yield ActaEntrega.findAll({
             where,
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo',
                             attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial']
                         }
@@ -87,21 +81,20 @@ const obtenerActas = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.status(500).json({ msg: 'Error al obtener las actas de entrega' });
     }
 });
-exports.obtenerActas = obtenerActas;
 /**
  * Obtener acta por ID con detalles completos
  */
-const obtenerActaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActaPorId = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
+        const acta = yield ActaEntrega.findByPk(Number(id), {
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -119,12 +112,11 @@ const obtenerActaPorId = (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(500).json({ msg: 'Error al obtener el acta' });
     }
 });
-exports.obtenerActaPorId = obtenerActaPorId;
 /**
  * Crear nueva acta de entrega con múltiples dispositivos
  */
-const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const transaction = yield connection_1.default.transaction();
+export const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transaction = yield sequelize.transaction();
     try {
         const { nombreReceptor, cedulaReceptor, cargoReceptor, telefonoReceptor, correoReceptor, firmaReceptor, fechaDevolucionEsperada, observacionesEntrega, dispositivos: dispositivosRaw, // Viene como string JSON desde FormData
         Uid } = req.body;
@@ -148,7 +140,7 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         // Verificar que todos los dispositivos estén disponibles
         const dispositivosIds = dispositivos.map((d) => d.dispositivoId);
-        const dispositivosDB = yield dispositivo_1.Dispositivo.findAll({
+        const dispositivosDB = yield Dispositivo.findAll({
             where: { id: dispositivosIds },
             transaction
         });
@@ -164,7 +156,7 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
         // Generar número de acta
         const numeroActa = yield generarNumeroActa();
         // Crear el acta (sin firma, se firmará por correo)
-        const acta = yield actaEntrega_1.ActaEntrega.create({
+        const acta = yield ActaEntrega.create({
             numeroActa,
             nombreReceptor,
             cedulaReceptor,
@@ -186,14 +178,14 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 if (!fotosMap[dispositivoId]) {
                     fotosMap[dispositivoId] = [];
                 }
-                fotosMap[dispositivoId].push((0, multer_1.getPhotoUrl)(file.filename, 'entregas'));
+                fotosMap[dispositivoId].push(getPhotoUrl(file.filename, 'entregas'));
             }
         }
         // Crear detalles del acta y actualizar estado de dispositivos
         for (const item of dispositivos) {
             const dispositivo = dispositivosDB.find(d => d.id === item.dispositivoId);
             // Crear detalle
-            yield detalleActa_1.DetalleActa.create({
+            yield DetalleActa.create({
                 actaId: acta.id,
                 dispositivoId: item.dispositivoId,
                 estadoEntrega: dispositivo === null || dispositivo === void 0 ? void 0 : dispositivo.estado,
@@ -203,9 +195,9 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
                 devuelto: false
             }, { transaction });
             // Actualizar estado del dispositivo a reservado (pendiente de firma)
-            yield dispositivo_1.Dispositivo.update({ estado: 'reservado' }, { where: { id: item.dispositivoId }, transaction });
+            yield Dispositivo.update({ estado: 'reservado' }, { where: { id: item.dispositivoId }, transaction });
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: item.dispositivoId,
                 tipoMovimiento: 'reserva',
                 estadoAnterior: 'disponible',
@@ -218,14 +210,14 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
         yield transaction.commit();
         // Obtener acta completa con detalles
-        const actaCompleta = yield actaEntrega_1.ActaEntrega.findByPk(acta.id, {
+        const actaCompleta = yield ActaEntrega.findByPk(acta.id, {
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -233,7 +225,7 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
             ]
         });
         // Emitir evento de WebSocket para actualización en tiempo real
-        const io = (0, server_1.getIO)();
+        const io = getIO();
         io.to('actas').emit('acta:created', actaCompleta);
         io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
         res.status(201).json({
@@ -247,12 +239,11 @@ const crearActaEntrega = (req, res) => __awaiter(void 0, void 0, void 0, functio
         res.status(500).json({ msg: 'Error al crear el acta de entrega' });
     }
 });
-exports.crearActaEntrega = crearActaEntrega;
 /**
  * Registrar devolución de dispositivos (parcial o completa)
  */
-const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const transaction = yield connection_1.default.transaction();
+export const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const transaction = yield sequelize.transaction();
     try {
         const { id } = req.params; // ID del acta
         const { devoluciones: devolucionesRaw, // Viene como string JSON desde FormData
@@ -271,8 +262,8 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         console.log('📦 Procesando devolución para acta:', id);
         console.log('   Dispositivos a devolver:', (devoluciones === null || devoluciones === void 0 ? void 0 : devoluciones.length) || 0);
-        const acta = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
-            include: [{ model: detalleActa_1.DetalleActa, as: 'detalles' }],
+        const acta = yield ActaEntrega.findByPk(Number(id), {
+            include: [{ model: DetalleActa, as: 'detalles' }],
             transaction
         });
         if (!acta) {
@@ -288,13 +279,13 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 if (!fotosMap[detalleId]) {
                     fotosMap[detalleId] = [];
                 }
-                fotosMap[detalleId].push((0, multer_1.getPhotoUrl)(file.filename, 'devoluciones'));
+                fotosMap[detalleId].push(getPhotoUrl(file.filename, 'devoluciones'));
             }
         }
         // Procesar cada devolución
         for (const devolucion of devoluciones) {
             console.log('   Procesando devolución de detalle:', devolucion.detalleId);
-            const detalle = yield detalleActa_1.DetalleActa.findByPk(devolucion.detalleId, { transaction });
+            const detalle = yield DetalleActa.findByPk(devolucion.detalleId, { transaction });
             if (!detalle) {
                 console.log('   ⚠️ Detalle no encontrado:', devolucion.detalleId);
                 continue;
@@ -322,13 +313,13 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
                 nuevoEstado = 'perdido';
             }
             console.log('   Cambiando estado de dispositivo', detalle.dispositivoId, 'a:', nuevoEstado);
-            yield dispositivo_1.Dispositivo.update({
+            yield Dispositivo.update({
                 estado: nuevoEstado,
                 condicion: devolucion.condicionDevolucion
             }, { where: { id: detalle.dispositivoId }, transaction });
             console.log('   ✅ Estado de dispositivo actualizado');
             // Registrar movimiento
-            yield movimientoDispositivo_1.MovimientoDispositivo.create({
+            yield MovimientoDispositivo.create({
                 dispositivoId: detalle.dispositivoId,
                 tipoMovimiento: 'devolucion',
                 estadoAnterior: 'entregado',
@@ -341,7 +332,7 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
             console.log('   ✅ Movimiento registrado');
         }
         // Verificar si todos los dispositivos fueron devueltos
-        const detallesActualizados = yield detalleActa_1.DetalleActa.findAll({
+        const detallesActualizados = yield DetalleActa.findAll({
             where: { actaId: acta.id },
             transaction
         });
@@ -361,14 +352,14 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         }, { transaction });
         yield transaction.commit();
         // Obtener acta actualizada
-        const actaActualizada = yield actaEntrega_1.ActaEntrega.findByPk(Number(id), {
+        const actaActualizada = yield ActaEntrega.findByPk(Number(id), {
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo'
                         }
                     ]
@@ -386,27 +377,26 @@ const registrarDevolucion = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al registrar la devolución' });
     }
 });
-exports.registrarDevolucion = registrarDevolucion;
 /**
  * Obtener actas activas (préstamos pendientes)
  */
-const obtenerActasActivas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerActasActivas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const actas = yield actaEntrega_1.ActaEntrega.findAll({
+        const actas = yield ActaEntrega.findAll({
             where: {
                 estado: {
-                    [sequelize_1.Op.in]: ['activa', 'devuelta_parcial']
+                    [Op.in]: ['activa', 'devuelta_parcial']
                 }
             },
             include: [
                 {
-                    model: detalleActa_1.DetalleActa,
+                    model: DetalleActa,
                     as: 'detalles',
                     where: { devuelto: false },
                     required: false,
                     include: [
                         {
-                            model: dispositivo_1.Dispositivo,
+                            model: Dispositivo,
                             as: 'dispositivo',
                             attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial']
                         }
@@ -422,23 +412,22 @@ const obtenerActasActivas = (req, res) => __awaiter(void 0, void 0, void 0, func
         res.status(500).json({ msg: 'Error al obtener las actas activas' });
     }
 });
-exports.obtenerActasActivas = obtenerActasActivas;
 /**
  * Obtener historial de entregas de un dispositivo específico
  */
-const obtenerHistorialDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+export const obtenerHistorialDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { dispositivoId } = req.params;
-        const historial = yield detalleActa_1.DetalleActa.findAll({
+        const historial = yield DetalleActa.findAll({
             where: { dispositivoId },
             include: [
                 {
-                    model: actaEntrega_1.ActaEntrega,
+                    model: ActaEntrega,
                     as: 'acta',
                     attributes: ['id', 'numeroActa', 'nombreReceptor', 'cargoReceptor', 'fechaEntrega', 'estado']
                 }
             ],
-            order: [[{ model: actaEntrega_1.ActaEntrega, as: 'acta' }, 'fechaEntrega', 'DESC']]
+            order: [[{ model: ActaEntrega, as: 'acta' }, 'fechaEntrega', 'DESC']]
         });
         res.json(historial);
     }
@@ -447,4 +436,3 @@ const obtenerHistorialDispositivo = (req, res) => __awaiter(void 0, void 0, void
         res.status(500).json({ msg: 'Error al obtener el historial del dispositivo' });
     }
 });
-exports.obtenerHistorialDispositivo = obtenerHistorialDispositivo;

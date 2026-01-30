@@ -3,7 +3,7 @@ import {
   Response,
 } from 'express';
 
-import { Analista } from '../models/analista';
+import { Analista } from '../models/analista.js';
 
 // Obtener todos los analistas
 export const obtenerAnalistas = async (
@@ -257,4 +257,4 @@ export const eliminarAnalista = async (
 };
 
 // Importar Maestro para la verificación
-import { Maestro } from '../models/maestros';
+import { Maestro } from '../models/maestros.js';
