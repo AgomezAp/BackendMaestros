@@ -111,7 +111,7 @@ class Server {
     );
     this.app.use(
       cors({
-        origin: "*", // Permite todas las solicitudes de origen cruzado
+        origin: ["https://maestros.inventarioap.com/","http://localhost:4200"], // Permite todas las solicitudes de origen cruzado
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Métodos permitidos
         allowedHeaders: ["Content-Type", "Authorization"],
       })
