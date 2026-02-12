@@ -400,3 +400,44 @@ export const darDeBajaDispositivo = async (req: Request, res: Response): Promise
     res.status(500).json({ msg: 'Error al dar de baja el dispositivo' });
   }
 };
+
+/**
+ * Eliminar un dispositivo completamente
+ */
+export const eliminarDispositivo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    // Eliminar las fotos asociadas del servidor
+    if (dispositivo.fotos) {
+      try {
+        const fotos = JSON.parse(dispositivo.fotos);
+        for (const foto of fotos) {
+          deletePhoto(foto);
+        }
+      } catch (e) {
+        console.error('Error al eliminar fotos:', e);
+      }
+    }
+    
+    // Eliminar movimientos asociados
+    await MovimientoDispositivo.destroy({
+      where: { dispositivoId: Number(id) }
+    });
+    
+    // Eliminar el dispositivo
+    await dispositivo.destroy();
+    
+    res.json({ msg: 'Dispositivo eliminado exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar dispositivo:', error);
+    res.status(500).json({ msg: 'Error al eliminar el dispositivo' });
+  }
+};

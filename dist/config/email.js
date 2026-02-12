@@ -37,7 +37,7 @@ transporter.verify((error, success) => {
  */
 export function enviarCorreoFirma(destinatario, nombreReceptor, token, dispositivos, comentarios) {
     return __awaiter(this, void 0, void 0, function* () {
-        const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://maestros.inventarioap.com';
         const enlaceFirma = `${frontendUrl}/firmar/${token}`;
         // Crear lista de dispositivos para el correo
         const listaDispositivos = dispositivos.map(d => `<tr>
@@ -322,7 +322,7 @@ export function enviarNotificacionRechazo(destinatario, nombreReceptor, motivo) 
  */
 export function enviarCorreoDevolucion(destinatario, nombreReceptor, token, dispositivos, comentarios) {
     return __awaiter(this, void 0, void 0, function* () {
-        const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://maestros.inventarioap.com';
         const enlaceFirma = `${frontendUrl}/firmar-devolucion/${token}`;
         // Crear lista de dispositivos para el correo
         const listaDispositivos = dispositivos.map(d => `<tr>

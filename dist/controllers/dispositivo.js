@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Op } from 'sequelize';
 import { Dispositivo } from '../models/dispositivo.js';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
-import { getPhotoUrl } from '../config/multer.js';
+import { getPhotoUrl, deletePhoto } from '../config/multer.js';
 import { getIO } from '../models/server.js';
 /**
  * Obtener todos los dispositivos con filtros
@@ -339,5 +339,41 @@ export const darDeBajaDispositivo = (req, res) => __awaiter(void 0, void 0, void
     catch (error) {
         console.error('Error al dar de baja dispositivo:', error);
         res.status(500).json({ msg: 'Error al dar de baja el dispositivo' });
+    }
+});
+/**
+ * Eliminar un dispositivo completamente
+ */
+export const eliminarDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const dispositivo = yield Dispositivo.findByPk(Number(id));
+        if (!dispositivo) {
+            res.status(404).json({ msg: 'Dispositivo no encontrado' });
+            return;
+        }
+        // Eliminar las fotos asociadas del servidor
+        if (dispositivo.fotos) {
+            try {
+                const fotos = JSON.parse(dispositivo.fotos);
+                for (const foto of fotos) {
+                    deletePhoto(foto);
+                }
+            }
+            catch (e) {
+                console.error('Error al eliminar fotos:', e);
+            }
+        }
+        // Eliminar movimientos asociados
+        yield MovimientoDispositivo.destroy({
+            where: { dispositivoId: Number(id) }
+        });
+        // Eliminar el dispositivo
+        yield dispositivo.destroy();
+        res.json({ msg: 'Dispositivo eliminado exitosamente' });
+    }
+    catch (error) {
+        console.error('Error al eliminar dispositivo:', error);
+        res.status(500).json({ msg: 'Error al eliminar el dispositivo' });
     }
 });

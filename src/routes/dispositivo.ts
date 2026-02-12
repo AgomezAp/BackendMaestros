@@ -9,7 +9,8 @@ import {
   cambiarEstadoDispositivo,
   obtenerEstadisticas,
   obtenerTrazabilidad,
-  darDeBajaDispositivo
+  darDeBajaDispositivo,
+  eliminarDispositivo
 } from '../controllers/dispositivo.js';
 import validateToken from './validateToken.js';
 
@@ -29,5 +30,6 @@ router.post('/', validateToken, upload.array('fotos', 10), registrarDispositivo)
 router.put('/:id', validateToken, actualizarDispositivo);
 router.patch('/:id/estado', validateToken, cambiarEstadoDispositivo);
 router.patch('/:id/baja', validateToken, darDeBajaDispositivo);
+router.delete('/:id', validateToken, eliminarDispositivo);
 
 export default router;
