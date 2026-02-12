@@ -111,9 +111,10 @@ class Server {
     );
     this.app.use(
       cors({
-        origin: ["https://maestros.inventarioap.com/","http://localhost:4200"], // Permite todas las solicitudes de origen cruzado
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Métodos permitidos
-        allowedHeaders: ["Content-Type", "Authorization"],
+        origin: ["https://maestros.inventarioap.com","http://localhost:4200"],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-Requested-With"],
+        optionsSuccessStatus: 204,
       })
     );
     // Servir archivos estáticos de uploads
