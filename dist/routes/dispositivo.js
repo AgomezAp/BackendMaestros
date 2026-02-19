@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { upload } from '../config/multer.js';
-import { obtenerDispositivos, obtenerDisponibles, obtenerDispositivoPorId, registrarDispositivo, actualizarDispositivo, cambiarEstadoDispositivo, obtenerEstadisticas, obtenerTrazabilidad, darDeBajaDispositivo, eliminarDispositivo } from '../controllers/dispositivo.js';
+import { obtenerDispositivos, obtenerDisponibles, obtenerDispositivoPorId, registrarDispositivo, actualizarDispositivo, cambiarEstadoDispositivo, obtenerEstadisticas, obtenerTrazabilidad, darDeBajaDispositivo, eliminarDispositivo, agregarFotosDispositivo } from '../controllers/dispositivo.js';
 import validateToken from './validateToken.js';
 const router = Router();
 // Rutas específicas primero (antes de las rutas con parámetros dinámicos)
@@ -13,6 +13,7 @@ router.get('/:id', validateToken, obtenerDispositivoPorId);
 // Rutas de escritura
 router.post('/', validateToken, upload.array('fotos', 10), registrarDispositivo);
 router.put('/:id', validateToken, actualizarDispositivo);
+router.post('/:id/fotos', validateToken, upload.array('fotos', 10), agregarFotosDispositivo);
 router.patch('/:id/estado', validateToken, cambiarEstadoDispositivo);
 router.patch('/:id/baja', validateToken, darDeBajaDispositivo);
 router.delete('/:id', validateToken, eliminarDispositivo);

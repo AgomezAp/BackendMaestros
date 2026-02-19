@@ -441,3 +441,78 @@ export const eliminarDispositivo = async (req: Request, res: Response): Promise<
     res.status(500).json({ msg: 'Error al eliminar el dispositivo' });
   }
 };
+
+/**
+ * Agregar fotos a un dispositivo existente
+ */
+export const agregarFotosDispositivo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { Uid } = req.body;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    // Procesar nuevas fotos
+    let nuevasFotos: string[] = [];
+    if (req.files && (req.files as Express.Multer.File[]).length > 0) {
+      nuevasFotos = (req.files as Express.Multer.File[]).map(file => 
+        `/uploads/dispositivos/${file.filename}`
+      );
+    }
+    
+    if (nuevasFotos.length === 0) {
+      res.status(400).json({ msg: 'No se proporcionaron fotos' });
+      return;
+    }
+    
+    // Obtener fotos existentes
+    let fotosExistentes: string[] = [];
+    if (dispositivo.fotos) {
+      try {
+        fotosExistentes = JSON.parse(dispositivo.fotos);
+      } catch (e) {
+        console.error('Error al parsear fotos existentes:', e);
+      }
+    }
+    
+    // Combinar fotos existentes con nuevas
+    const todasLasFotos = [...fotosExistentes, ...nuevasFotos];
+    
+    // Actualizar dispositivo con las nuevas fotos
+    await dispositivo.update({
+      fotos: JSON.stringify(todasLasFotos)
+    });
+    
+    // Registrar movimiento
+    await MovimientoDispositivo.create({
+      dispositivoId: dispositivo.id,
+      tipoMovimiento: 'actualizacion',
+      descripcion: `Se agregaron ${nuevasFotos.length} foto(s) al dispositivo`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    try {
+      const io = getIO();
+      io.to('inventario').emit('dispositivo:updated', { dispositivo });
+    } catch (e) {
+      console.log('WebSocket no disponible');
+    }
+    
+    res.json({
+      msg: 'Fotos agregadas exitosamente',
+      dispositivo,
+      fotosAgregadas: nuevasFotos.length
+    });
+  } catch (error) {
+    console.error('Error al agregar fotos:', error);
+    res.status(500).json({ msg: 'Error al agregar las fotos' });
+  }
+};
+

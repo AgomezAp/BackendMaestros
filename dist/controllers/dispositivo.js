@@ -377,3 +377,67 @@ export const eliminarDispositivo = (req, res) => __awaiter(void 0, void 0, void 
         res.status(500).json({ msg: 'Error al eliminar el dispositivo' });
     }
 });
+/**
+ * Agregar fotos a un dispositivo existente
+ */
+export const agregarFotosDispositivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { Uid } = req.body;
+        const dispositivo = yield Dispositivo.findByPk(Number(id));
+        if (!dispositivo) {
+            res.status(404).json({ msg: 'Dispositivo no encontrado' });
+            return;
+        }
+        // Procesar nuevas fotos
+        let nuevasFotos = [];
+        if (req.files && req.files.length > 0) {
+            nuevasFotos = req.files.map(file => `/uploads/dispositivos/${file.filename}`);
+        }
+        if (nuevasFotos.length === 0) {
+            res.status(400).json({ msg: 'No se proporcionaron fotos' });
+            return;
+        }
+        // Obtener fotos existentes
+        let fotosExistentes = [];
+        if (dispositivo.fotos) {
+            try {
+                fotosExistentes = JSON.parse(dispositivo.fotos);
+            }
+            catch (e) {
+                console.error('Error al parsear fotos existentes:', e);
+            }
+        }
+        // Combinar fotos existentes con nuevas
+        const todasLasFotos = [...fotosExistentes, ...nuevasFotos];
+        // Actualizar dispositivo con las nuevas fotos
+        yield dispositivo.update({
+            fotos: JSON.stringify(todasLasFotos)
+        });
+        // Registrar movimiento
+        yield MovimientoDispositivo.create({
+            dispositivoId: dispositivo.id,
+            tipoMovimiento: 'actualizacion',
+            descripcion: `Se agregaron ${nuevasFotos.length} foto(s) al dispositivo`,
+            fecha: new Date(),
+            Uid
+        });
+        // Emitir evento WebSocket
+        try {
+            const io = getIO();
+            io.to('inventario').emit('dispositivo:updated', { dispositivo });
+        }
+        catch (e) {
+            console.log('WebSocket no disponible');
+        }
+        res.json({
+            msg: 'Fotos agregadas exitosamente',
+            dispositivo,
+            fotosAgregadas: nuevasFotos.length
+        });
+    }
+    catch (error) {
+        console.error('Error al agregar fotos:', error);
+        res.status(500).json({ msg: 'Error al agregar las fotos' });
+    }
+});
