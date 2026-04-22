@@ -389,27 +389,52 @@ export const rechazarActaConToken = async (req: Request, res: Response): Promise
     }
     
     const acta = tokenFirma.acta as any;
-    
+
     // Actualizar token
     await tokenFirma.update({
       estado: 'rechazado',
       motivoRechazo: motivo
     }, { transaction });
-    
+
     // Actualizar estado del acta
     await ActaEntrega.update({
       estado: 'rechazada',
       observacionesDevolucion: `Rechazada por el receptor: ${motivo}`
-    }, { 
+    }, {
       where: { id: acta.id },
-      transaction 
+      transaction
     });
-    
+
+    // Revertir dispositivos de 'reservado' a 'disponible'
+    const detalles = await DetalleActa.findAll({
+      where: { actaId: acta.id },
+      transaction
+    });
+
+    for (const detalle of detalles) {
+      await Dispositivo.update(
+        { estado: 'disponible' },
+        { where: { id: detalle.dispositivoId }, transaction }
+      );
+
+      await MovimientoDispositivo.create({
+        dispositivoId: detalle.dispositivoId,
+        tipoMovimiento: 'cambio_estado',
+        estadoAnterior: 'reservado',
+        estadoNuevo: 'disponible',
+        descripcion: `Acta ${acta.numeroActa} rechazada por receptor: ${motivo} - Dispositivo liberado al stock`,
+        actaId: acta.id,
+        fecha: new Date()
+      }, { transaction });
+    }
+
     await transaction.commit();
     
     // Emitir evento WebSocket para actualización en tiempo real
     const io = getIO();
+    const dispositivosIds = detalles.map((d: any) => d.dispositivoId);
     io.to('actas').emit('acta:rejected', { actaId: acta.id, estado: 'rechazada', motivo });
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
     
     // Enviar notificación de rechazo
     try {

@@ -4,6 +4,7 @@ import {
   obtenerActas,
   obtenerActaPorId,
   crearActaEntrega,
+  actualizarActaRechazada,
   registrarDevolucion,
   obtenerActasActivas,
   obtenerHistorialDispositivo
@@ -20,6 +21,9 @@ router.get('/historial/:dispositivoId', validateToken, obtenerHistorialDispositi
 
 // Crear acta de entrega con fotos
 router.post('/', validateToken, upload.any(), crearActaEntrega);
+
+// Actualizar acta rechazada (corrección) - usa POST para compatibilidad con multer
+router.post('/:id/corregir', validateToken, upload.any(), actualizarActaRechazada);
 
 // Registrar devolución
 router.post('/:id/devolucion', validateToken, upload.any(), registrarDevolucion);

@@ -68,7 +68,7 @@ export const obtenerActas = async (req: Request, res: Response) => {
             {
               model: Dispositivo,
               as: 'dispositivo',
-              attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial']
+              attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial', 'imei']
             }
           ]
         }
@@ -459,7 +459,7 @@ export const obtenerActasActivas = async (req: Request, res: Response) => {
             {
               model: Dispositivo,
               as: 'dispositivo',
-              attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial']
+              attributes: ['id', 'nombre', 'categoria', 'marca', 'modelo', 'serial', 'imei']
             }
           ]
         }
@@ -480,7 +480,7 @@ export const obtenerActasActivas = async (req: Request, res: Response) => {
 export const obtenerHistorialDispositivo = async (req: Request, res: Response) => {
   try {
     const { dispositivoId } = req.params;
-    
+
     const historial = await DetalleActa.findAll({
       where: { dispositivoId },
       include: [
@@ -492,10 +492,183 @@ export const obtenerHistorialDispositivo = async (req: Request, res: Response) =
       ],
       order: [[{ model: ActaEntrega, as: 'acta' }, 'fechaEntrega', 'DESC']]
     });
-    
+
     res.json(historial);
   } catch (error) {
     console.error('Error al obtener historial:', error);
     res.status(500).json({ msg: 'Error al obtener el historial del dispositivo' });
+  }
+};
+
+/**
+ * Actualizar acta rechazada (corregir y reenviar para firma)
+ */
+export const actualizarActaRechazada = async (req: Request, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const {
+      nombreReceptor,
+      cedulaReceptor,
+      cargoReceptor,
+      telefonoReceptor,
+      correoReceptor,
+      fechaDevolucionEsperada,
+      observacionesEntrega,
+      dispositivos: dispositivosRaw,
+      Uid
+    } = req.body;
+
+    const acta = await ActaEntrega.findByPk(Number(id), {
+      include: [{ model: DetalleActa, as: 'detalles' }],
+      transaction
+    });
+
+    if (!acta) {
+      await transaction.rollback();
+      res.status(404).json({ msg: 'Acta no encontrada' });
+      return;
+    }
+
+    if (acta.estado !== 'rechazada') {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Solo se pueden editar actas en estado rechazada' });
+      return;
+    }
+
+    let dispositivos = dispositivosRaw;
+    if (typeof dispositivosRaw === 'string') {
+      try {
+        dispositivos = JSON.parse(dispositivosRaw);
+      } catch (e) {
+        await transaction.rollback();
+        res.status(400).json({ msg: 'Formato de dispositivos inválido' });
+        return;
+      }
+    }
+
+    if (!dispositivos || !Array.isArray(dispositivos) || dispositivos.length === 0) {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Debe seleccionar al menos un dispositivo' });
+      return;
+    }
+
+    const dispositivosIds = dispositivos.map((d: any) => d.dispositivoId);
+
+    // Liberar dispositivos del acta original que quedaron en 'reservado'
+    // (pueden quedar así si la acta fue rechazada antes del fix de stock)
+    const detallesOriginales = await DetalleActa.findAll({
+      where: { actaId: acta.id },
+      transaction
+    });
+
+    for (const detalle of detallesOriginales) {
+      await Dispositivo.update(
+        { estado: 'disponible' },
+        {
+          where: { id: detalle.dispositivoId, estado: 'reservado' },
+          transaction
+        }
+      );
+    }
+
+    // Verificar que todos los dispositivos seleccionados están disponibles
+    const dispositivosDB = await Dispositivo.findAll({
+      where: { id: dispositivosIds },
+      transaction
+    });
+
+    const noDisponibles = dispositivosDB.filter(d => d.estado !== 'disponible');
+    if (noDisponibles.length > 0) {
+      await transaction.rollback();
+      res.status(400).json({
+        msg: 'Algunos dispositivos no están disponibles (están en uso por otra acta)',
+        dispositivos: noDisponibles.map(d => `${d.nombre} (${d.estado})`)
+      });
+      return;
+    }
+
+    // Procesar fotos nuevas
+    let fotosMap: { [key: string]: string[] } = {};
+    if (req.files && Array.isArray(req.files)) {
+      for (const file of req.files as Express.Multer.File[]) {
+        const dispositivoId = file.fieldname.replace('fotos_', '');
+        if (!fotosMap[dispositivoId]) fotosMap[dispositivoId] = [];
+        fotosMap[dispositivoId].push(getPhotoUrl(file.filename, 'entregas'));
+      }
+    }
+
+    // Eliminar detalles anteriores (los dispositivos ya fueron liberados arriba)
+    await DetalleActa.destroy({ where: { actaId: acta.id }, transaction });
+
+    // Actualizar datos del acta
+    await acta.update({
+      nombreReceptor,
+      cedulaReceptor,
+      cargoReceptor,
+      telefonoReceptor,
+      correoReceptor,
+      fechaDevolucionEsperada: fechaDevolucionEsperada || null,
+      observacionesEntrega,
+      estado: 'pendiente_firma',
+      firmaReceptor: null,
+      fechaFirma: null,
+      observacionesDevolucion: null
+    }, { transaction });
+
+    // Crear nuevos detalles y reservar dispositivos
+    for (const item of dispositivos) {
+      const dispositivo = dispositivosDB.find(d => d.id === item.dispositivoId);
+
+      await DetalleActa.create({
+        actaId: acta.id,
+        dispositivoId: item.dispositivoId,
+        estadoEntrega: dispositivo?.estado,
+        condicionEntrega: item.condicionEntrega || dispositivo?.condicion,
+        fotosEntrega: JSON.stringify(fotosMap[item.dispositivoId] || []),
+        observacionesEntrega: item.observaciones,
+        devuelto: false
+      }, { transaction });
+
+      await Dispositivo.update(
+        { estado: 'reservado' },
+        { where: { id: item.dispositivoId }, transaction }
+      );
+
+      await MovimientoDispositivo.create({
+        dispositivoId: item.dispositivoId,
+        tipoMovimiento: 'reserva' as any,
+        estadoAnterior: 'disponible',
+        estadoNuevo: 'reservado',
+        descripcion: `Re-reservado para ${nombreReceptor} (${cargoReceptor}) - Acta ${acta.numeroActa} corregida`,
+        actaId: acta.id,
+        fecha: new Date(),
+        Uid
+      }, { transaction });
+    }
+
+    await transaction.commit();
+
+    const actaCompleta = await ActaEntrega.findByPk(acta.id, {
+      include: [{
+        model: DetalleActa,
+        as: 'detalles',
+        include: [{ model: Dispositivo, as: 'dispositivo' }]
+      }]
+    });
+
+    const io = getIO();
+    io.to('actas').emit('acta:created', actaCompleta);
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivosIds });
+
+    res.json({
+      msg: 'Acta actualizada exitosamente',
+      acta: actaCompleta
+    });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al actualizar acta rechazada:', error);
+    res.status(500).json({ msg: 'Error al actualizar el acta' });
   }
 };
