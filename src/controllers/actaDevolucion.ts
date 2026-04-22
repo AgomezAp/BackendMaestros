@@ -165,9 +165,12 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
       }
     }
     
+    const correoReceptorFinal = (correoReceptor || correoEntrega || '').trim();
+
     console.log('📦 Creando acta de devolución...');
     console.log('   Quien devuelve:', nombreEntrega, '- Correo:', correoEntrega);
     console.log('   Quien recibe:', nombreReceptor);
+    console.log('   Correo receptor final:', correoReceptorFinal || '(sin correo)');
     console.log('   Dispositivos:', dispositivos?.length || 0);
     console.log('   Firma receptor incluida:', !!firmaReceptor);
     
@@ -185,6 +188,12 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
       return;
     }
     
+    if (!correoReceptorFinal) {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Debe enviar un correo válido para continuar con el proceso de devolución' });
+      return;
+    }
+
     // Verificar que todos los dispositivos estén entregados
     const dispositivosIds = dispositivos.map((d: any) => d.dispositivoId);
     const dispositivosDB = await Dispositivo.findAll({
@@ -210,7 +219,7 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
       numeroActa,
       nombreReceptor,
       cargoReceptor,
-      correoReceptor,
+      correoReceptor: correoReceptorFinal,
       nombreEntrega,
       cargoEntrega,
       correoEntrega,
@@ -620,7 +629,7 @@ export const firmarActaDevolucionConToken = async (req: Request, res: Response):
       estadoDevolucion: d.estadoDevolucion
     })) || [];
     
-    const destinatarios = [acta.correoReceptor];
+    const destinatarios = [acta.correoReceptor].filter(Boolean) as string[];
     if (acta.correoEntrega) {
       destinatarios.push(acta.correoEntrega);
     }
@@ -778,9 +787,12 @@ export const reenviarCorreoDevolucion = async (req: Request, res: Response): Pro
       imei: d.dispositivo?.imei || 'N/A'
     })) || [];
     
+    const correoDestino = acta.correoEntrega || acta.correoReceptor;
+    const nombreDestino = acta.nombreEntrega || acta.nombreReceptor;
+
     await enviarCorreoDevolucion(
-      acta.correoReceptor,
-      acta.nombreReceptor,
+      correoDestino,
+      nombreDestino,
       tokenFirma.token,
       dispositivos,
       acta.observaciones
@@ -791,7 +803,7 @@ export const reenviarCorreoDevolucion = async (req: Request, res: Response): Pro
     
     res.json({
       msg: 'Correo reenviado correctamente',
-      correo: acta.correoReceptor
+      correo: correoDestino
     });
   } catch (error: any) {
     console.error('Error al reenviar correo:', error);

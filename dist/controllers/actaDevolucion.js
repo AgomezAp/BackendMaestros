@@ -147,9 +147,11 @@ export const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 
                 return;
             }
         }
+        const correoReceptorFinal = (correoReceptor || correoEntrega || '').trim();
         console.log('📦 Creando acta de devolución...');
         console.log('   Quien devuelve:', nombreEntrega, '- Correo:', correoEntrega);
         console.log('   Quien recibe:', nombreReceptor);
+        console.log('   Correo receptor final:', correoReceptorFinal || '(sin correo)');
         console.log('   Dispositivos:', (dispositivos === null || dispositivos === void 0 ? void 0 : dispositivos.length) || 0);
         console.log('   Firma receptor incluida:', !!firmaReceptor);
         // Validar que haya dispositivos
@@ -162,6 +164,11 @@ export const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 
         if (!correoEntrega) {
             yield transaction.rollback();
             res.status(400).json({ msg: 'El correo del empleado que devuelve es requerido' });
+            return;
+        }
+        if (!correoReceptorFinal) {
+            yield transaction.rollback();
+            res.status(400).json({ msg: 'Debe enviar un correo válido para continuar con el proceso de devolución' });
             return;
         }
         // Verificar que todos los dispositivos estén entregados
@@ -186,7 +193,7 @@ export const crearActaDevolucion = (req, res) => __awaiter(void 0, void 0, void 
             numeroActa,
             nombreReceptor,
             cargoReceptor,
-            correoReceptor,
+            correoReceptor: correoReceptorFinal,
             nombreEntrega,
             cargoEntrega,
             correoEntrega,
@@ -544,7 +551,7 @@ export const firmarActaDevolucionConToken = (req, res) => __awaiter(void 0, void
                 estadoDevolucion: d.estadoDevolucion
             });
         })) || [];
-        const destinatarios = [acta.correoReceptor];
+        const destinatarios = [acta.correoReceptor].filter(Boolean);
         if (acta.correoEntrega) {
             destinatarios.push(acta.correoEntrega);
         }
@@ -679,12 +686,14 @@ export const reenviarCorreoDevolucion = (req, res) => __awaiter(void 0, void 0, 
                 imei: ((_e = d.dispositivo) === null || _e === void 0 ? void 0 : _e.imei) || 'N/A'
             });
         })) || [];
-        yield enviarCorreoDevolucion(acta.correoReceptor, acta.nombreReceptor, tokenFirma.token, dispositivos, acta.observaciones);
+        const correoDestino = acta.correoEntrega || acta.correoReceptor;
+        const nombreDestino = acta.nombreEntrega || acta.nombreReceptor;
+        yield enviarCorreoDevolucion(correoDestino, nombreDestino, tokenFirma.token, dispositivos, acta.observaciones);
         // Actualizar fecha de envío
         yield tokenFirma.update({ fechaEnvio: new Date() });
         res.json({
             msg: 'Correo reenviado correctamente',
-            correo: acta.correoReceptor
+            correo: correoDestino
         });
     }
     catch (error) {
